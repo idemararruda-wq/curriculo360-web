@@ -23,7 +23,7 @@ function age(birth){if(!birth)return null;const d=new Date(birth+"T12:00:00");re
 function genderName(g){return ({female:"Feminino",male:"Masculino",nonbinary:"Não binário",other:"Outro",prefer_not_to_say:"Prefere não informar"})[g]||"Não informado"}
 async function refresh(){
  const u=await db.auth.getUser();if(!u.data.user)return;uid=u.data.user.id;
- const {data,error}=await db.from("resume_records").select("*").order("created_at",{ascending:false}).limit(1500);
+ const {data,error}=await db.from("resume_records").select("*").is("deleted_at",null).order("created_at",{ascending:false}).limit(1500);
  if(error){$("c360List").textContent="Erro ao consultar currículos: "+error.message;return}rows=data||[];
  $("c360Total").textContent=rows.length;$("c360Cities").textContent=new Set(rows.map(x=>x.city).filter(x=>x&&x!=="Não identificada")).size;
  $("c360Reviews").textContent=rows.filter(x=>x.status==="review").length;
