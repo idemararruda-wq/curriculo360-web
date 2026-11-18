@@ -7,7 +7,32 @@ const css=document.createElement("style");css.textContent=".c360btn{background:#
 const modal=document.createElement("dialog");modal.className="c360modal";modal.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 id="c360Title">Detalhes</h2><button id="c360Close" class="c360btn light">Fechar</button></div><div id="c360Body"></div>';document.body.append(modal);$("c360Close").onclick=()=>modal.close();
 function open(title,html){$("c360Title").textContent=title;$("c360Body").innerHTML=html;modal.showModal()}
 const link=j=>new URL("candidatura.html?vaga="+encodeURIComponent(j.id),location.href).href;
-const msg=j=>["📢 *VAGA: "+j.title+"*",j.company_name?"🏢 "+j.company_name:"",j.city?"📍 "+[j.neighborhood,j.city].filter(Boolean).join(" - "):"",j.salary_description?"💰 "+j.salary_description:"",j.schedule_description?"⏰ "+j.schedule_description:"",j.requirements?"📋 "+j.requirements:"",j.transport_notes?"🚌 "+j.transport_notes:"","✅ *Inscreva-se neste link:*",link(j),"Nossa equipe fará a triagem e poderá entrar em contato para entrevista. Inscrição não garante contratação."].filter(Boolean).join("\n");
+const msg=j=>{
+ const p=[
+  "🚨 *OPORTUNIDADE DE EMPREGO — "+(j.job_code||j.title)+"* 🚨",
+  "",
+  "💼 *VAGA:* "+j.title,
+  "📍 *Local:* "+[j.company_name,j.city].filter(Boolean).join(" — "),
+  "💰 *Salário:* "+(j.salary_description||"A combinar"),
+  j.shift_options?.length?"🕒 *Turnos:* "+j.shift_options.join(" | "):j.schedule_description?"🕒 *Horário:* "+j.schedule_description:"",
+  j.work_scale?"📅 *Escala:* "+j.work_scale:"",
+  j.benefits_description?"🎁 *Benefícios:* "+j.benefits_description:"",
+  j.attendance_bonus?"🏅 *Bônus de assiduidade:* R$ "+Number(j.attendance_bonus).toLocaleString("pt-BR",{minimumFractionDigits:2}):"",
+  j.meal_allowance?"🛒 *Vale-alimentação:* R$ "+Number(j.meal_allowance).toLocaleString("pt-BR",{minimumFractionDigits:2}):"",
+  j.meal_on_site?"🍽️ Refeição no local":"",
+  j.requirements?"✅ *Requisitos:* "+j.requirements:"",
+  j.starts_on?"📆 *Início previsto:* "+new Date(j.starts_on+"T12:00:00").toLocaleDateString("pt-BR"):"",
+  "",
+  "📍 *Regiões atendidas:*",
+  (j.accepted_regions||[]).join(", "),
+  "",
+  "📲 *PARA SE CANDIDATAR, ABRA O LINK E PREENCHA SEU CADASTRO:*",
+  link(j),
+  "",
+  "Após o cadastro, nossa equipe fará a triagem e poderá entrar em contato para agendar uma entrevista. A inscrição não garante contratação."
+ ];
+ return p.filter(x=>x!==null&&x!==undefined).join("\n");
+};
 async function copy(t){try{await navigator.clipboard.writeText(t);alert("Link copiado. Cole no grupo do WhatsApp!")}catch{prompt("Copie:",t)}}
 let jobs=[],apps=[],people=[],user=null;
 async function refresh(){
