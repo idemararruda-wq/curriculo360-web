@@ -26,6 +26,7 @@ const msg=j=>{
   "📍 *Regiões atendidas:*",
   (j.accepted_regions||[]).join(", "),
   "",
+  j.contact_whatsapp?"📞 *Contato da seleção:* "+j.contact_whatsapp:"",
   "📲 *PARA SE CANDIDATAR, ABRA O LINK E PREENCHA SEU CADASTRO:*",
   link(j),
   "",
