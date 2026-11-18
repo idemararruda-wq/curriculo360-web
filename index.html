@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Currículo360 | Recrutamento</title>
+<style>
+:root{font:15px system-ui,sans-serif;color:#18213d;background:#f5f6fc}*{box-sizing:border-box}
+body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}button{background:#6d55da;color:#fff;border:0;border-radius:9px;padding:12px 19px;font-weight:700}
+input,select,textarea{padding:12px;border:1px solid #dcddec;border-radius:9px;width:100%;margin:6px 0 15px}
+label{font-weight:650;font-size:13px}h1{letter-spacing:-1px}p,small{color:#79829a}
+#login{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}#hero{padding:7vw;background:linear-gradient(145deg,#0e1429,#34316b);color:white;display:flex;flex-direction:column;justify-content:center}#hero h1{font-size:clamp(38px,5vw,70px);line-height:1.1}#hero p{color:#cad0e7;line-height:1.8}#access{display:grid;place-items:center;padding:30px}form.card{background:#fff;border-radius:17px;padding:30px;width:min(420px,100%);box-shadow:0 10px 40px #10204612}.logo{font-size:24px;font-weight:850;color:#a58cff}#hero .logo{color:#fff}.card button{width:100%}.hide{display:none!important}
+header{display:flex;align-items:center;justify-content:space-between;background:#111831;color:#fff;padding:15px 5vw;gap:15px;flex-wrap:wrap}
+main{max-width:1150px;margin:35px auto;padding:0 20px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.panel,.stat{background:#fff;border:1px solid #e8e9f1;border-radius:14px;padding:22px;margin:14px 0}.stat b{display:block;font-size:34px;margin:10px 0}
+.job{padding:16px 0;border-top:1px solid #e5e8f2}.job strong{font-size:17px}.job small{display:block;margin:5px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.muted{color:#8290a5}#notice{margin:10px 0;color:#6a4dce}#newJob{max-width:650px}textarea{min-height:80px}
+@media(max-width:720px){#login{grid-template-columns:1fr}#hero{display:none}.stats{grid-template-columns:1fr 1fr}header{padding:14px}}
+</style></head><body>
+<section id="login"><div id="hero"><div class="logo">✦ currículo360</div><div><h1>Talentos certos.<br><span style="color:#b5a0ff">Nas regiões certas.</span></h1><p>Central de vagas, recrutadoras e candidaturas da sua agência.</p></div></div>
+<div id="access"><form id="signIn" class="card"><div class="logo">✦ Currículo360</div><h1>Acesse sua conta</h1><p>Área exclusiva para recrutadores autorizados.</p><label>E-mail<input id="email" type="email" required autocomplete="email"></label><label>Senha<input id="password" type="password" required autocomplete="current-password"></label><button>Entrar</button><p id="authStatus" role="status"></p></form></div></section>
+<section id="workspace" class="hide"><header><div class="logo">✦ currículo360</div><div><span id="hello"></span>　<button id="logout">Sair</button></div></header>
+<main><div class="row"><div><h1>Painel de recrutamento</h1><p>Atualização a cada 15 segundos enquanto a página estiver aberta.</p></div><button id="toggleJob">+ Nova vaga</button></div><p id="notice" role="status"></p>
+<div class="stats"><div class="stat"><small>Vagas abertas</small><b id="nJobs">0</b></div><div class="stat"><small>Candidaturas</small><b id="nApps">0</b></div><div class="stat"><small>Novas inscrições</small><b id="nNew">0</b></div></div>
+<section id="newJob" class="panel hide"><h2>Cadastrar vaga</h2><form id="jobForm"><label>Cargo<input name="title" required></label><label>Empresa<input name="company_name"></label><label>Cidade<input name="city"></label><label>Bairro<input name="neighborhood"></label><label>Salário<input name="salary_description"></label><label>Horário<input name="schedule_description"></label><label>Regiões atendidas, separadas por vírgulas<input name="accepted_regions"></label><label>Requisitos<textarea name="requirements"></textarea></label><label>Status<select name="status"><option value="draft">Rascunho</option><option value="open">Aberta</option></select></label><button>Salvar vaga</button></form></section>
+<section class="panel"><h2>Vagas cadastradas</h2><div id="jobs"></div></section>
+<section class="panel"><h2>Candidaturas recentes</h2><div id="applications"></div></section>
+</main></section>
+<script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+const db=createClient('https://rqbmcnczfnfabsgiuvcs.supabase.co','sb_publishable_BrHgJVI8ooHwbV5rbqYVxg_6vRmOzjz');
+const el=id=>document.getElementById(id), escapeHtml=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let uid=null,jobData=[],candidateData=[],appData=[],timer;
+function message(s){el('notice').textContent=s}
+function signout(msg=''){uid=null;clearInterval(timer);el('workspace').classList.add('hide');el('login').classList.remove('hide');el('authStatus').textContent=msg}
+async function authorize(user){const {data,error}=await db.from('recruiters').select('full_name,enabled').eq('user_id',user.id).maybeSingle();if(error||!data?.enabled){await db.auth.signOut();signout('Usuário ainda não autorizado. Solicite acesso ao administrador.');return}uid=user.id;el('hello').textContent=data.full_name;el('login').classList.add('hide');el('workspace').classList.remove('hide');await refresh();clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)refresh()},15000)}
+async function refresh(){if(!uid)return;const results=await Promise.all(['jobs','applications','candidates'].map(t=>db.from(t).select('*').order('created_at',{ascending:false}).limit(500)));if(results.some(x=>x.error)){message('Não foi possível atualizar os dados.');return}jobData=results[0].data;appData=results[1].data;candidateData=results[2].data;
+el('nJobs').textContent=jobData.filter(x=>x.status==='open').length;el('nApps').textContent=appData.length;el('nNew').textContent=appData.filter(x=>x.status==='new').length;
+el('jobs').innerHTML=jobData.map(j=>'<div class="job"><strong>'+escapeHtml(j.title)+'</strong><small>'+escapeHtml([j.company_name,j.neighborhood,j.city].filter(Boolean).join(' · '))+' · '+escapeHtml(j.status)+'</small><small>'+appData.filter(a=>a.job_id===j.id).length+' candidaturas</small><button type="button" data-job="'+j.id+'">Ver inscrições</button></div>').join('')||'<p>Nenhuma vaga cadastrada.</p>';showApps()}
+function showApps(id){let a=id?appData.filter(x=>x.job_id===id):appData.slice(0,20);el('applications').innerHTML=a.map(x=>{const c=candidateData.find(c=>c.id===x.candidate_id)||{};const j=jobData.find(j=>j.id===x.job_id)||{};let phone=String(c.whatsapp||'').replace(/\D/g,'');if(phone.length===10||phone.length===11)phone='55'+phone;return '<div class="job"><strong>'+escapeHtml(c.full_name)+'</strong><small>'+escapeHtml(j.title)+' · '+escapeHtml(c.city)+' · '+escapeHtml(x.status)+'</small>'+(phone?'<a rel="noopener" target="_blank" href="https://wa.me/'+phone+'">Abrir WhatsApp</a>':'')+'</div>'}).join('')||'<p>Nenhuma candidatura registrada.</p>'}
+document.addEventListener('click',e=>{let id=e.target.dataset?.job;if(id){showApps(id);el('applications').scrollIntoView({behavior:'smooth'})}});
+el('toggleJob').onclick=()=>el('newJob').classList.toggle('hide');
+el('signIn').onsubmit=async e=>{e.preventDefault();el('authStatus').textContent='Verificando…';const {data,error}=await db.auth.signInWithPassword({email:el('email').value,password:el('password').value});if(error){el('authStatus').textContent=error.message;return}await authorize(data.user)};
+el('logout').onclick=async()=>{await db.auth.signOut();signout('Sessão encerrada.')};
+el('jobForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const row={title:f.get('title'),owner_user_id:uid,company_name:f.get('company_name'),city:f.get('city'),neighborhood:f.get('neighborhood'),salary_description:f.get('salary_description'),schedule_description:f.get('schedule_description'),requirements:f.get('requirements'),accepted_regions:String(f.get('accepted_regions')||'').split(',').map(s=>s.trim()).filter(Boolean),status:f.get('status')};const {error}=await db.from('jobs').insert(row);if(error){message(error.message);return}message('Vaga salva!');e.target.reset();el('newJob').classList.add('hide');await refresh()};
+const session=await db.auth.getUser();if(session.data?.user)await authorize(session.data.user);else signout();
+</script></body></html>
