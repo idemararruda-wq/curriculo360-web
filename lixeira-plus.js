@@ -7,7 +7,7 @@ btn.onclick=async()=>{
  if(error){alert(error.message);return}
  const self=await db.auth.getUser();const access=await db.from("recruiters").select("role,enabled").eq("user_id",self.data.user?.id).maybeSingle();const canPurge=access.data?.role==="admin"&&access.data?.enabled;
  const d=document.createElement("dialog");d.style.cssText="padding:25px;border:0;border-radius:12px;min-width:350px";
- d.innerHTML='<h2>Lixeira de currículos</h2><p>'+data.length+' currículos arquivados</p>'+data.map(r=>'<p><span>'+r.source_name.replace(/[<>]/g,"")+'</span> <button data-restore="'+r.id+'">Restaurar</button>'</p>').join("")+'<button id="closeTrash">Fechar</button>';
+ d.innerHTML='<h2>Lixeira de currículos</h2><p>'+data.length+' currículos arquivados</p>'+data.map(r=>'<p><span>'+r.source_name.replace(/[<>]/g,"")+'</span> <button data-restore="'+r.id+'">Restaurar</button></p>').join("")+'<button id="closeTrash">Fechar</button>';
  document.body.append(d);d.showModal();d.querySelector("#closeTrash").onclick=()=>{d.close();d.remove()};
  d.onclick=async e=>{const id=e.target.dataset?.restore;if(!id)return;const r=await db.from("resume_records").update({deleted_at:null,deleted_by:null,deletion_reason:null}).eq("id",id);if(r.error)alert(r.error.message);else{d.close();d.remove();location.reload()}};
 };
