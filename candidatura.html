@@ -24,7 +24,7 @@ const id=new URLSearchParams(location.search).get('vaga'), E=s=>document.getElem
 let job=null;
 if(!id||!/^[0-9a-f-]{36}$/i.test(id)){E('jobTitle').textContent='Link de vaga inválido.'}
 else {
- const {data,error}=await db.from('jobs').select('id,title,job_code,company_name,city,neighborhood,salary_description,schedule_description,shift_options,work_scale,attendance_bonus,meal_allowance,meal_on_site,benefits_description,starts_on,description,requirements,transportation_type,transport_notes,accepted_regions,status,link_expires_at').eq('id',id).eq('status','open').maybeSingle();
+ const {data,error}=await db.from('jobs').select('id,title,job_code,company_name,city,neighborhood,salary_description,schedule_description,shift_options,work_scale,attendance_bonus,meal_allowance,meal_on_site,benefits_description,starts_on,description,requirements,transportation_type,transport_notes,contact_whatsapp,accepted_regions,status,link_expires_at').eq('id',id).eq('status','open').maybeSingle();
  if(error||!data)E('jobTitle').textContent='Esta vaga não está disponível para inscrição.';
  else {
   job=data;
@@ -45,7 +45,8 @@ else {
    ['REQUISITOS',job.requirements],
    ['INÍCIO PREVISTO',date],
    ['REGIÕES ATENDIDAS',(job.accepted_regions||[]).join(', ')],
-   ['TRANSPORTE',job.transport_notes]
+   ['TRANSPORTE',job.transport_notes],
+   ['CONTATO DA SELEÇÃO',job.contact_whatsapp||'']
   ].filter(x=>x[1]);
   const panel=document.createElement('div');
   meta.forEach(([label,value])=>{const row=document.createElement('p');row.className='muted';const strong=document.createElement('strong');strong.textContent=label+': ';strong.style.color='#172040';row.append(strong,document.createTextNode(value));panel.append(row)});
