@@ -67,7 +67,7 @@ async function importFiles(){
  for(const file of selected){
   status.textContent="Processando "+file.name+" — "+(count+1)+"/"+selected.length;
   try{
-   if(file.size>3145728||!/\\.(pdf|docx)$/i.test(file.name))throw Error("Arquivo precisa ser PDF/DOCX de até 3 MB");
+   if(file.size>3145728||!/\.(pdf|docx)$/i.test(file.name))throw Error("Arquivo precisa ser PDF/DOCX de até 3 MB");
    const buff=await file.arrayBuffer();
    const digest=await crypto.subtle.digest("SHA-256",buff),hash=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
    if(rows.some(r=>r.file_hash===hash)){count++;continue}
@@ -77,7 +77,7 @@ async function importFiles(){
    const path="manual/"+crypto.randomUUID()+"."+ext;
    const upload=await db.storage.from("curriculos-privados").upload(path,file,{upsert:false,contentType:ext==="pdf"?"application/pdf":"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
    if(upload.error)throw Error(upload.error.message);
-   const record={source_name:file.name,storage_path:path,file_hash:hash,created_by:uid,full_name:file.name.replace(/\\.(pdf|docx)$/i,"").replace(/[-_]/g," ").trim().slice(0,130),extracted_text:text,...classified,status:classified.city==="Não identificada"||classified.main_profession==="Não identificada"?"review":"new",extraction_note:reason||"Classificação automática sujeita a revisão"};
+   const record={source_name:file.name,storage_path:path,file_hash:hash,created_by:uid,full_name:file.name.replace(/\.(pdf|docx)$/i,"").replace(/[-_]/g," ").trim().slice(0,130),extracted_text:text,...classified,status:classified.city==="Não identificada"||classified.main_profession==="Não identificada"?"review":"new",extraction_note:reason||"Classificação automática sujeita a revisão"};
    const save=await db.from("resume_records").insert(record);
    if(save.error){await db.storage.from("curriculos-privados").remove([path]);throw Error(save.error.message)}
    count++;
