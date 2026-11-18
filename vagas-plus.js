@@ -52,9 +52,19 @@ function regionFlag(c,j){const r=(j.accepted_regions||[]).filter(Boolean);if(!r.
 function showJobs(id){
  const j=jobs.find(j=>j.id===id);if(!j)return;
  const all=apps.filter(a=>a.job_id===id).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
- open("Candidaturas — "+j.title,'<p class="c360meta">'+safe(j.city||"")+' • '+all.length+' inscrição(ões)</p><div class="c360-info">Divulgue o mesmo link em vários grupos: todas as inscrições serão associadas à mesma vaga.</div><div class="c360-actions"><button class="c360btn" id="sendVaga">Divulgar no WhatsApp</button><button class="c360btn light" id="copyVaga">Copiar link</button></div><h3>Candidatos desta vaga</h3>'+all.map(a=>{const c=people.find(x=>x.id===a.candidate_id)||{};return '<div class="c360-card"><b>'+safe(c.full_name)+'</b><div class="c360meta">'+safe([c.neighborhood,c.city].filter(Boolean).join(", "))+' • '+safe(a.status)+'</div><div class="c360-status">'+safe(regionFlag(c,j))+'</div><button class="c360btn light" data-c360application="'+a.id+'">Abrir ficha / triagem</button></div>'}).join('')+(all.length?'':'<p>Nenhuma inscrição ainda.</p>'));
+ open("Candidaturas — "+j.title,'<p class="c360meta">'+safe(j.city||"")+' • '+all.length+' inscrição(ões)</p><div class="c360-info">Um link pode ser encaminhado por outras pessoas. Use prazo de inscrição e encerre a vaga quando quiser bloquear novas candidaturas.</div><div class="c360-actions"><button class="c360btn" id="sendVaga">Divulgar no WhatsApp</button><button class="c360btn light" id="copyVaga">Copiar link</button><button class="c360btn light" id="closeVaga">Encerrar inscrições</button></div><label class="c360-field">Prazo final para inscrições (opcional)<input id="jobExpiry" type="datetime-local" value="'+(j.link_expires_at?new Date(new Date(j.link_expires_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'')+'"></label><button class="c360btn light" id="saveExpiry">Salvar prazo</button><h3>Candidatos desta vaga</h3>'+all.map(a=>{const c=people.find(x=>x.id===a.candidate_id)||{};return '<div class="c360-card"><b>'+safe(c.full_name)+'</b><div class="c360meta">'+safe([c.neighborhood,c.city].filter(Boolean).join(", "))+' • '+safe(a.status)+'</div><div class="c360-status">'+safe(regionFlag(c,j))+'</div><button class="c360btn light" data-c360application="'+a.id+'">Abrir ficha / triagem</button></div>'}).join('')+(all.length?'':'<p>Nenhuma inscrição ainda.</p>'));
  $("sendVaga").onclick=()=>window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(msg(j)),"_blank","noopener");
  $("copyVaga").onclick=()=>copy(link(j));
+ $("saveExpiry").onclick=async()=>{
+  const v=$("jobExpiry").value,iso=v?new Date(v).toISOString():null;
+  const {error}=await db.from("jobs").update({link_expires_at:iso}).eq("id",j.id);
+  if(error)alert(error.message);else{j.link_expires_at=iso;alert("Prazo de inscrição salvo.")}
+ };
+ $("closeVaga").onclick=async()=>{
+  if(!confirm("Encerrar esta vaga? O link deixará de aceitar novas inscrições."))return;
+  const {error}=await db.from("jobs").update({status:"closed"}).eq("id",j.id);
+  if(error)alert(error.message);else{modal.close();await refresh();alert("Vaga encerrada.");}
+ };
 }
 async function showApplicant(id){
  const a=apps.find(x=>x.id===id);if(!a)return;const c=people.find(x=>x.id===a.candidate_id)||{},j=jobs.find(x=>x.id===a.job_id)||{};
