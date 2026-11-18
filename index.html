@@ -45,4 +45,4 @@ E('teamList').innerHTML=team.map(t=>'<div class="job-row"><div><strong>'+esc(t.f
 }
 document.addEventListener('click',e=>{const id=e.target.dataset?.job;if(id){view('dashboard');E('liveRecent').innerHTML=appData.filter(a=>a.job_id===id).map(a=>{const c=candidates.find(c=>c.id===a.candidate_id)||{};return '<div class="job-row"><strong>'+esc(c.full_name)+'</strong><small>'+esc(a.status)+'</small></div>'}).join('')||'<p>Sem inscrições.</p>';E('liveRecent').scrollIntoView({behavior:'smooth'})}});
 const {data}=await db.auth.getUser();if(data.user)await authorize(data.user);
-</script><script type="module" src="vagas-plus.js"></script><script type="module" src="curriculos-plus.js"></script><script type="module" src="gestao-plus.js"></script></body></html>
+</script><script type="module" src="vagas-plus.js"></script><script type="module" src="curriculos-plus.js"></script><script type="module" src="gestao-plus.js"></script><script type="module" src="lixeira-plus.js"></script></body></html>
