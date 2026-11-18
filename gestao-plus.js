@@ -49,3 +49,15 @@ document.addEventListener("click",ev=>{
  if(btn.dataset.editjob){ev.preventDefault();ev.stopImmediatePropagation();editJob(btn.dataset.editjob)}
  if(btn.dataset.c360application){const id=btn.dataset.c360application;setTimeout(()=>{const d=document.getElementById("c360Body");if(!d)return;const b=document.createElement("button");b.className="mgButton";b.textContent="Editar candidato, entrevista, integração e contratação";b.onclick=()=>editApplication(id);d.prepend(b)},100)}
 },true);
+
+window.addEventListener("click",event=>{
+ const id=event.target.closest("[data-c360application]")?.dataset.c360application;
+ if(!id)return;
+ setTimeout(()=>{
+  const container=document.getElementById("c360Body");
+  if(!container||!document.getElementById("c360Triagem"))return;
+  if(container.querySelector("[data-full-edit]"))return;
+  const b=document.createElement("button");b.className="mgButton";b.textContent="Editar ficha completa / entrevista / contratação";b.dataset.fullEdit=id;
+  b.onclick=()=>editApplication(id);container.prepend(b);
+ },100);
+},true);
