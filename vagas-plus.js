@@ -47,6 +47,4 @@ document.addEventListener("click",e=>{
  if(b.dataset.c360application){e.stopImmediatePropagation();showApplicant(b.dataset.c360application)}
  if(b.dataset.job){e.stopImmediatePropagation();showJobs(b.dataset.job)}
 },true);
-const observer=new MutationObserver(()=>{if(document.getElementById("app")&&!document.getElementById("app").classList.contains("hidden"))refresh()});
-observer.observe(document.getElementById("jobsList"),{childList:true});
-setInterval(()=>{if(!document.hidden)refresh()},15000);refresh();
+setInterval(()=>{if(!document.hidden)refresh()},15000);setTimeout(refresh,1200);
