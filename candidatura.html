@@ -4,6 +4,7 @@
 <div class="grid"><label>WhatsApp com DDD *<input name="whatsapp" type="tel" required minlength="10" maxlength="20" placeholder="(11) 99999-9999"></label><label>E-mail (opcional)<input name="email" type="email" maxlength="160" autocomplete="email" placeholder="seuemail@exemplo.com"></label></div>
 <div class="grid"><label>Cidade onde mora *<input name="city" required maxlength="95" placeholder="Ex.: Osasco"></label><label>Bairro onde mora<input name="neighborhood" maxlength="95" placeholder="Ex.: Jardim Rochdale"></label></div>
 <div class="grid"><label>Data de nascimento (opcional)<input name="date_of_birth" type="date"></label><label>Gênero (opcional)<select name="gender"><option value="">Prefiro não informar</option><option value="female">Feminino</option><option value="male">Masculino</option><option value="nonbinary">Não binário</option><option value="other">Outro</option></select></label></div>
+<label id="shiftWrap" class="hidden">Qual turno você prefere?<select name="shift_preference" id="shiftPreference"><option value="">Selecione o turno</option></select></label>
 <label>Qual sua experiência profissional?<textarea name="experiences" maxlength="1800" placeholder="Ex.: Auxiliar de logística por 2 anos; produção por 6 meses."></textarea></label>
 <div class="grid"><label>Tem experiência na função?<select name="has_experience"><option value="">Selecione</option><option value="yes">Sim</option><option value="no">Não</option></select></label><label>Tempo de experiência<input name="experience_duration" maxlength="80" placeholder="Ex.: 1 ano e 6 meses"></label></div>
 <div class="grid"><label>Disponibilidade de horário<select name="availability"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option><option>Madrugada</option><option>Qualquer horário</option></select></label><label>Salário da vaga atende você?<select name="salary_acceptable"><option value="">Selecione</option><option value="yes">Sim</option><option value="no">Não</option></select></label></div>
@@ -23,9 +24,38 @@ const id=new URLSearchParams(location.search).get('vaga'), E=s=>document.getElem
 let job=null;
 if(!id||!/^[0-9a-f-]{36}$/i.test(id)){E('jobTitle').textContent='Link de vaga inválido.'}
 else {
- const {data,error}=await db.from('jobs').select('id,title,city,neighborhood,salary_description,schedule_description,description,requirements,transportation_type,transport_notes,status').eq('id',id).eq('status','open').maybeSingle();
+ const {data,error}=await db.from('jobs').select('id,title,job_code,company_name,city,neighborhood,salary_description,schedule_description,shift_options,work_scale,attendance_bonus,meal_allowance,meal_on_site,benefits_description,starts_on,description,requirements,transportation_type,transport_notes,accepted_regions,status,link_expires_at').eq('id',id).eq('status','open').maybeSingle();
  if(error||!data)E('jobTitle').textContent='Esta vaga não está disponível para inscrição.';
- else {job=data;E('jobTitle').textContent=job.title;E('jobMeta').textContent=[job.neighborhood,job.city,job.salary_description,job.schedule_description].filter(Boolean).join(' • ');E('jobDetail').textContent=[job.description,job.requirements?'Requisitos: '+job.requirements:'',job.transport_notes?'Transporte: '+job.transport_notes:''].filter(Boolean).join(' · ');E('applyForm').classList.remove('hidden');}
+ else {
+  job=data;
+  const date=job.starts_on?new Date(job.starts_on+'T12:00:00').toLocaleDateString('pt-BR'):'';
+  const reais=value=>Number(value).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  E('jobTitle').textContent=job.title;
+  E('jobMeta').textContent=[job.company_name,job.city,job.salary_description].filter(Boolean).join(' • ');
+  const meta=[
+   ['CÓDIGO',job.job_code],
+   ['LOCAL DE TRABALHO',[job.company_name,job.city].filter(Boolean).join(' — ')],
+   ['SALÁRIO',job.salary_description],
+   ['TURNOS',(job.shift_options||[]).join(' | ')||job.schedule_description],
+   ['ESCALA',job.work_scale],
+   ['BENEFÍCIOS',job.benefits_description],
+   ['BÔNUS DE ASSIDUIDADE',job.attendance_bonus?reais(job.attendance_bonus)+' (condicionado à assiduidade)':''],
+   ['VALE-ALIMENTAÇÃO',job.meal_allowance?reais(job.meal_allowance):''],
+   ['REFEIÇÃO NO LOCAL',job.meal_on_site?'Sim':''],
+   ['REQUISITOS',job.requirements],
+   ['INÍCIO PREVISTO',date],
+   ['REGIÕES ATENDIDAS',(job.accepted_regions||[]).join(', ')],
+   ['TRANSPORTE',job.transport_notes]
+  ].filter(x=>x[1]);
+  const panel=document.createElement('div');
+  meta.forEach(([label,value])=>{const row=document.createElement('p');row.className='muted';const strong=document.createElement('strong');strong.textContent=label+': ';strong.style.color='#172040';row.append(strong,document.createTextNode(value));panel.append(row)});
+  E('jobDetail').replaceChildren(panel);
+  if(job.link_expires_at&&new Date(job.link_expires_at)<new Date()){E('jobDetail').insertAdjacentHTML('beforeend','<p class="warning">O prazo de inscrição desta vaga terminou.</p>');}
+  else {
+   if(job.shift_options?.length){E('shiftWrap').classList.remove('hidden');job.shift_options.forEach(shift=>{const option=document.createElement('option');option.value=shift;option.textContent=shift;E('shiftPreference').append(option)})}
+   E('applyForm').classList.remove('hidden');
+  }
+ }
 }
 const form=E('applyForm');form.onsubmit=async e=>{
  e.preventDefault();if(!job)return;
@@ -39,7 +69,7 @@ const form=E('applyForm');form.onsubmit=async e=>{
     resume_base64=btoa(bin);
   }
   const get=k=>String(f.get(k)||'').trim();const bool=k=>get(k)==='yes';
-  const payload={job_id:job.id,full_name:get('full_name'),whatsapp:get('whatsapp'),email:get('email'),city:get('city'),neighborhood:get('neighborhood'),date_of_birth:get('date_of_birth'),gender:get('gender'),experiences:get('experiences'),availability:get('availability'),has_experience:bool('has_experience'),experience_duration:get('experience_duration'),salary_acceptable:bool('salary_acceptable'),worked_at_company:bool('worked_at_company'),transportation_count:get('transportation_count'),access_to_workplace:get('access_to_workplace'),transport_description:get('transport_description'),privacy_consent:!!f.get('privacy_consent'),website:get('website'),resume_name:file?.name||null,resume_base64};
+  const payload={job_id:job.id,full_name:get('full_name'),whatsapp:get('whatsapp'),email:get('email'),city:get('city'),neighborhood:get('neighborhood'),date_of_birth:get('date_of_birth'),gender:get('gender'),experiences:get('experiences'),availability:[get('shift_preference'),get('availability')].filter(Boolean).join(' | '),has_experience:bool('has_experience'),experience_duration:get('experience_duration'),salary_acceptable:bool('salary_acceptable'),worked_at_company:bool('worked_at_company'),transportation_count:get('transportation_count'),access_to_workplace:get('access_to_workplace'),transport_description:get('transport_description'),privacy_consent:!!f.get('privacy_consent'),website:get('website'),resume_name:file?.name||null,resume_base64};
   const res=await fetch('https://rqbmcnczfnfabsgiuvcs.supabase.co/functions/v1/c360-inscricao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'Não foi possível concluir sua inscrição.');
   form.classList.add('hidden');E('done').classList.remove('hidden');E('done').scrollIntoView({behavior:'smooth'});
