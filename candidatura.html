@@ -3,6 +3,7 @@
 <form id="applyForm" class="card hidden"><div class="eyebrow">CANDIDATURA SIMPLIFICADA</div><h2>Preencha seus dados</h2><p class="muted">Você não precisa criar uma senha. Preencha os campos com calma para nossa equipe avaliar seu perfil.</p><label>Seu nome completo *<input name="full_name" required minlength="3" maxlength="130" autocomplete="name" placeholder="Nome e sobrenome"></label>
 <div class="grid"><label>WhatsApp com DDD *<input name="whatsapp" type="tel" required minlength="10" maxlength="20" placeholder="(11) 99999-9999"></label><label>E-mail (opcional)<input name="email" type="email" maxlength="160" autocomplete="email" placeholder="seuemail@exemplo.com"></label></div>
 <div class="grid"><label>Cidade onde mora *<input name="city" required maxlength="95" placeholder="Ex.: Osasco"></label><label>Bairro onde mora<input name="neighborhood" maxlength="95" placeholder="Ex.: Jardim Rochdale"></label></div>
+<label>Endereço para conferir o trajeto (opcional)<input name="address" maxlength="180" autocomplete="street-address" placeholder="Rua e número, ou CEP"></label>
 <div class="grid"><label>Data de nascimento (opcional)<input name="date_of_birth" type="date"></label><label>Gênero (opcional)<select name="gender"><option value="">Prefiro não informar</option><option value="female">Feminino</option><option value="male">Masculino</option><option value="nonbinary">Não binário</option><option value="other">Outro</option></select></label></div>
 <label id="shiftWrap" class="hidden">Qual turno você prefere?<select name="shift_preference" id="shiftPreference"><option value="">Selecione o turno</option></select></label>
 <label>Qual sua experiência profissional?<textarea name="experiences" maxlength="1800" placeholder="Ex.: Auxiliar de logística por 2 anos; produção por 6 meses."></textarea></label>
@@ -10,13 +11,13 @@
 <div class="grid"><label>Disponibilidade de horário<select name="availability"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option><option>Madrugada</option><option>Qualquer horário</option></select></label><label>Salário da vaga atende você?<select name="salary_acceptable"><option value="">Selecione</option><option value="yes">Sim</option><option value="no">Não</option></select></label></div>
 <div class="grid"><label>Já trabalhou nesta empresa?<select name="worked_at_company"><option value="">Selecione</option><option value="yes">Sim</option><option value="no">Não</option></select></label><label>Quantas conduções usa por trajeto?<select name="transportation_count"><option value="">Não sei informar</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4 ou mais</option></select></label></div>
 <label>Como chegaria à empresa?<input name="access_to_workplace" maxlength="200" placeholder="Ex.: ônibus até Cajamar, fretado ou trem"></label>
-<label>Qual condução utiliza e quanto gasta?<textarea name="transport_description" maxlength="500" placeholder="Ex.: ônibus municipal e trem; R$ 5,00 + R$ 5,20 por trecho (se souber)."></textarea></label>
+<label>Qual condução utiliza e quanto gasta?<textarea name="transport_description" maxlength="500" placeholder="Ex.: ônibus 123 + trem, R$ 10,20 por trecho (se souber)."></textarea></label>
 <label>Seu currículo em PDF ou DOCX (até 3 MB)<input id="resume" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
 <p class="muted">Seu currículo será armazenado de forma privada, acessível apenas à equipe de recrutamento autorizada. Não informe senhas ou dados bancários.</p>
 <label class="check"><input name="privacy_consent" type="checkbox" required>Autorizo o tratamento dos meus dados e do meu currículo para avaliação desta candidatura e eventual contato sobre a vaga.</label>
 <div class="honeypot" aria-hidden="true"><label>Site<input name="website" tabindex="-1" autocomplete="off"></label></div>
 <button id="send" type="submit">Enviar minha candidatura →</button><p id="status" role="status" class="status"></p></form>
-<section id="done" class="card hidden"><h1 class="success">✓ Inscrição recebida!</h1><p>Nossa equipe fará a triagem do seu perfil e poderá entrar em contato pelo WhatsApp informado. O envio não garante entrevista ou contratação.</p></section><p class="muted" style="text-align:center;font-size:12px">Currículo360 · Sistema de recrutamento e seleção</p></main>
+<section id="done" class="card hidden"><h1 class="success">✓ Inscrição recebida!</h1><p>Aguarde o retorno da equipe de recrutamento. Após avaliar sua candidatura, a recrutadora poderá entrar em contato pelo WhatsApp para agendar uma entrevista ou informar o andamento da seleção.</p></section><p class="muted" style="text-align:center;font-size:12px">Currículo360 · Sistema de recrutamento e seleção</p></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const db=createClient('https://rqbmcnczfnfabsgiuvcs.supabase.co','sb_publishable_BrHgJVI8ooHwbV5rbqYVxg_6vRmOzjz');
@@ -42,6 +43,7 @@ else {
    ['BÔNUS DE ASSIDUIDADE',job.attendance_bonus?reais(job.attendance_bonus)+' (condicionado à assiduidade)':''],
    ['VALE-ALIMENTAÇÃO',job.meal_allowance?reais(job.meal_allowance):''],
    ['REFEIÇÃO NO LOCAL',job.meal_on_site?'Sim':''],
+   ['DESCRIÇÃO DA VAGA',job.description],
    ['REQUISITOS',job.requirements],
    ['INÍCIO PREVISTO',date],
    ['REGIÕES ATENDIDAS',(job.accepted_regions||[]).join(', ')],
@@ -70,7 +72,7 @@ const form=E('applyForm');form.onsubmit=async e=>{
     resume_base64=btoa(bin);
   }
   const get=k=>String(f.get(k)||'').trim();const bool=k=>get(k)==='yes';
-  const payload={job_id:job.id,full_name:get('full_name'),whatsapp:get('whatsapp'),email:get('email'),city:get('city'),neighborhood:get('neighborhood'),date_of_birth:get('date_of_birth'),gender:get('gender'),experiences:get('experiences'),availability:[get('shift_preference'),get('availability')].filter(Boolean).join(' | '),has_experience:bool('has_experience'),experience_duration:get('experience_duration'),salary_acceptable:bool('salary_acceptable'),worked_at_company:bool('worked_at_company'),transportation_count:get('transportation_count'),access_to_workplace:get('access_to_workplace'),transport_description:get('transport_description'),privacy_consent:!!f.get('privacy_consent'),website:get('website'),resume_name:file?.name||null,resume_base64};
+  const payload={job_id:job.id,full_name:get('full_name'),whatsapp:get('whatsapp'),email:get('email'),city:get('city'),neighborhood:get('neighborhood'),address:get('address'),date_of_birth:get('date_of_birth'),gender:get('gender'),experiences:get('experiences'),availability:[get('shift_preference'),get('availability')].filter(Boolean).join(' | '),has_experience:bool('has_experience'),experience_duration:get('experience_duration'),salary_acceptable:bool('salary_acceptable'),worked_at_company:bool('worked_at_company'),transportation_count:get('transportation_count'),access_to_workplace:get('access_to_workplace'),transport_description:get('transport_description'),privacy_consent:!!f.get('privacy_consent'),website:get('website'),resume_name:file?.name||null,resume_base64};
   const res=await fetch('https://rqbmcnczfnfabsgiuvcs.supabase.co/functions/v1/c360-inscricao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const data=await res.json();if(!res.ok||!data.ok)throw Error(data.error||'Não foi possível concluir sua inscrição.');
   form.classList.add('hidden');E('done').classList.remove('hidden');E('done').scrollIntoView({behavior:'smooth'});

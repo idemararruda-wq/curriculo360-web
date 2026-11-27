@@ -101,14 +101,36 @@ async function refreshTeam(){
  const u=await db.auth.getUser();if(!u.data.user)return;
  const {data:own}=await db.from("recruiters").select("role,enabled").eq("user_id",u.data.user.id).maybeSingle();
  if(own?.role!=="admin"||!own.enabled)return;
- const {data:team,error}=await db.from("recruiters").select("user_id,full_name,role,enabled,last_seen_at").order("created_at",{ascending:false});
+ const firstDay=new Date();
+ firstDay.setDate(firstDay.getDate()-30);
+ const {data:team,error}=await db.from("recruiters").select("user_id,full_name,role,enabled").order("created_at",{ascending:false});
  if(error)return;
- teamActions.innerHTML='<h3>Controle dos recrutadores</h3>'+team.map(m=>'<div style="padding:12px;border-top:1px solid #e7eaf4"><b>'+esc(m.full_name)+'</b> <small>'+esc(m.role)+' • '+(m.enabled?"Ativo":"Pendente")+'</small> <button class="c360btn alt" data-team="'+m.user_id+'" data-enable="'+(!m.enabled)+'">'+(m.enabled?"Desativar":"Autorizar")+'</button></div>').join("");
+ const totals=new Map();
+ let activityAvailable=true;
+ for(let offset=0;;offset+=500){
+  const activity=await db.from("activity_log").select("actor_user_id,action,record_id").eq("record_type","application").in("action",["interview_scheduled","interview_completed","candidate_hired"]).gte("created_at",firstDay.toISOString()).order("id").range(offset,offset+499);
+  if(activity.error){activityAvailable=false;break;}
+  for(const row of activity.data){
+   const key=row.actor_user_id+":"+row.action;
+   if(!totals.has(key))totals.set(key,new Set());
+   totals.get(key).add(row.record_id);
+  }
+  if(activity.data.length<500)break;
+ }
+ const count=(member,action)=>totals.get(member.user_id+":"+action)?.size||0;
+ $("teamList").classList.add("hidden");
+ teamActions.innerHTML=`<h3>Controle dos recrutadores</h3><p class="c360-muted">${activityAvailable?"Atividade registrada nos últimos 30 dias":"Não foi possível consultar a atividade da equipe."}</p>`+team.map(member=>`
+  <div class="job-row">
+   <div><strong>${esc(member.full_name)}</strong><small>${member.role==="admin"?"Administrador":"Recrutador"} · ${member.enabled?"Ativo":"Acesso pendente"}</small>
+   ${activityAvailable?`<small> · ${count(member,"interview_scheduled")} agendadas · ${count(member,"interview_completed")} realizadas · ${count(member,"candidate_hired")} contratações</small>`:""}</div>
+   ${member.user_id!==u.data.user.id?`<button class="c360btn alt" data-team="${esc(member.user_id)}" data-enable="${!member.enabled}">${member.enabled?"Desativar":"Autorizar"}</button>`:""}
+  </div>`).join("");
 }
 teamActions.onclick=async e=>{
  const b=e.target.closest("[data-team]");if(!b)return;const enable=b.dataset.enable==="true";
  if(!confirm(enable?"Autorizar este recrutador a ver currículos e candidaturas?":"Desativar este acesso?"))return;
- const {error}=await db.from("recruiters").update({enabled:enable}).eq("user_id",b.dataset.team);if(error)alert(error.message);else refreshTeam();
+ const {error}=await db.from("recruiters").update({enabled:enable}).eq("user_id",b.dataset.team).select("user_id").single();if(error)alert(error.message);else refreshTeam();
 };
 setInterval(()=>{if(!document.hidden){refresh();refreshTeam()}},30000);
+document.querySelector('[data-view="team"]').addEventListener("click",refreshTeam);
 setTimeout(()=>{refresh();refreshTeam()},1500);

@@ -20,6 +20,7 @@ const msg=j=>{
   j.attendance_bonus?"🏅 *Bônus de assiduidade:* R$ "+Number(j.attendance_bonus).toLocaleString("pt-BR",{minimumFractionDigits:2}):"",
   j.meal_allowance?"🛒 *Vale-alimentação:* R$ "+Number(j.meal_allowance).toLocaleString("pt-BR",{minimumFractionDigits:2}):"",
   j.meal_on_site?"🍽️ Refeição no local":"",
+  j.description?"📝 *Descrição:* "+j.description:"",
   j.requirements?"✅ *Requisitos:* "+j.requirements:"",
   j.starts_on?"📆 *Início previsto:* "+new Date(j.starts_on+"T12:00:00").toLocaleDateString("pt-BR"):"",
   "",
@@ -34,28 +35,37 @@ const msg=j=>{
  ];
  return p.filter(x=>x!==null&&x!==undefined).join("\n");
 };
-async function copy(t){try{await navigator.clipboard.writeText(t);alert("Link copiado. Cole no grupo do WhatsApp!")}catch{prompt("Copie:",t)}}
-let jobs=[],apps=[],people=[],user=null;
-async function refresh(){
- const auth=await db.auth.getUser();if(!auth.data.user)return;user=auth.data.user;
- const [j,a,c]=await Promise.all(["jobs","applications","candidates"].map(x=>db.from(x).select("*").limit(500)));
- if(j.error||a.error||c.error)return;jobs=j.data;apps=a.data;people=c.data;
- document.querySelectorAll("[data-job]").forEach(b=>{
-  const row=b.closest(".job-row");if(!row||row.dataset.c360enhanced)return;row.dataset.c360enhanced="1";
-  const j=jobs.find(j=>j.id===b.dataset.job);if(!j)return;
-  const div=document.createElement("div");div.className="c360-actions";
-  div.innerHTML='<button class="c360btn light" data-c360share="'+j.id+'">WhatsApp</button><button class="c360btn light" data-c360copy="'+j.id+'">Copiar link</button>';
-  row.append(div);
- });
+async function copy(t){try{await navigator.clipboard.writeText(t);alert("Anúncio copiado. Cole no grupo do WhatsApp.")}catch{prompt("Copie:",t)}}
+let jobs=[],apps=[],people=[];
+document.addEventListener('c360-data',({detail})=>({jobs,apps,people}=detail));
+function refresh(){document.dispatchEvent(new Event('c360-refresh'));}
+function regionFlag(c,j){
+ const normalize=value=>String(value??'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim().replace(/\s+/g,' ');
+ const accepted=(j.accepted_regions||[]).map(normalize).filter(Boolean);
+ const places=[c.city,c.neighborhood].map(normalize).filter(Boolean);
+ if(!accepted.length)return 'Regiões da vaga não informadas';
+ if(!places.length)return 'Residência a verificar';
+ const locations=[...places,normalize([c.city,c.neighborhood].filter(Boolean).join(' - ')),normalize([c.neighborhood,c.city].filter(Boolean).join(' - '))];
+ return accepted.some(region=>locations.includes(region))?'Região atendida':'Região a conferir';
 }
-function route(c,j){const origin=[c.neighborhood,c.city,"SP Brasil"].filter(Boolean).join(", "),destination=[j.address,j.neighborhood,j.city,"SP Brasil"].filter(Boolean).join(", ");return "https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(origin)+"&destination="+encodeURIComponent(destination)+"&travelmode=transit";}
-function regionFlag(c,j){const r=(j.accepted_regions||[]).filter(Boolean);if(!r.length)return "Regiões não informadas — verificar";const str=[c.city,c.neighborhood].join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();return r.some(x=>str.includes(String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()))?"Região informada como atendida":"Fora das regiões informadas — conferir";}
+function route(c,j){
+ const origin=[c.address,c.neighborhood,c.city,'SP Brasil'].filter(Boolean).join(', ');
+ const destination=[j.address,j.neighborhood,j.city,'SP Brasil'].filter(Boolean).join(', ');
+ const query=new URLSearchParams({api:'1',origin,destination,travelmode:'transit'});
+ return 'https://www.google.com/maps/dir/?'+query;
+}
+const statusLabel={new:'Nova inscrição',screening:'Em análise',contacted:'Contato realizado',interview:'Entrevista agendada',interviewed:'Entrevista feita',hired:'Contratado',rejected:'Reprovado'};
+const yesNo=value=>value===true?'Sim':value===false?'Não':'Não informado';
+const localDate=value=>value?new Date(new Date(value).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'';
 function showJobs(id){
  const j=jobs.find(j=>j.id===id);if(!j)return;
  const all=apps.filter(a=>a.job_id===id).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
- open("Candidaturas — "+j.title,'<p class="c360meta">'+safe(j.city||"")+' • '+all.length+' inscrição(ões)</p><div class="c360-info">Um link pode ser encaminhado por outras pessoas. Use prazo de inscrição e encerre a vaga quando quiser bloquear novas candidaturas.</div><div class="c360-actions"><button class="c360btn" id="sendVaga">Divulgar no WhatsApp</button><button class="c360btn light" id="copyVaga">Copiar link</button><button class="c360btn light" id="closeVaga">Encerrar inscrições</button></div><label class="c360-field">Prazo final para inscrições (opcional)<input id="jobExpiry" type="datetime-local" value="'+(j.link_expires_at?new Date(new Date(j.link_expires_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'')+'"></label><button class="c360btn light" id="saveExpiry">Salvar prazo</button><h3>Candidatos desta vaga</h3>'+all.map(a=>{const c=people.find(x=>x.id===a.candidate_id)||{};return '<div class="c360-card"><b>'+safe(c.full_name)+'</b><div class="c360meta">'+safe([c.neighborhood,c.city].filter(Boolean).join(", "))+' • '+safe(a.status)+'</div><div class="c360-status">'+safe(regionFlag(c,j))+'</div><button class="c360btn light" data-c360application="'+a.id+'">Abrir ficha / triagem</button></div>'}).join('')+(all.length?'':'<p>Nenhuma inscrição ainda.</p>'));
+ open("Candidaturas — "+j.title,'<p class="c360meta">'+safe(j.city||"")+' • '+all.length+' inscrição(ões)</p><div class="c360-info">Um link pode ser encaminhado por outras pessoas. Use prazo de inscrição e encerre a vaga quando quiser bloquear novas candidaturas.</div><div class="c360-actions"><button class="c360btn" id="sendVaga">Divulgar no WhatsApp</button><button class="c360btn light" id="copyVaga">Copiar anúncio</button><button class="c360btn light" id="closeVaga">Encerrar inscrições</button></div><label class="c360-field">Prazo final para inscrições (opcional)<input id="jobExpiry" type="datetime-local" value="'+(j.link_expires_at?new Date(new Date(j.link_expires_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'')+'"></label><button class="c360btn light" id="saveExpiry">Salvar prazo</button><h3>Candidatos desta vaga</h3>'+all.map(a=>{const c=people.find(x=>x.id===a.candidate_id)||{};return '<div class="c360-card"><b>'+safe(c.full_name)+'</b><div class="c360meta">'+safe([c.neighborhood,c.city].filter(Boolean).join(", "))+' • '+safe(statusLabel[a.status]||a.status)+'</div><div class="c360-status">'+safe(regionFlag(c,j))+'</div><button class="c360btn light" data-c360application="'+a.id+'">Abrir ficha / triagem</button></div>'}).join('')+(all.length?'':'<p>Nenhuma inscrição ainda.</p>'));
+ $("sendVaga").disabled=j.status!=="open";
+ $("copyVaga").disabled=j.status!=="open";
+ $("closeVaga").disabled=j.status==="closed";
  $("sendVaga").onclick=()=>window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(msg(j)),"_blank","noopener");
- $("copyVaga").onclick=()=>copy(link(j));
+ $("copyVaga").onclick=()=>copy(msg(j));
  $("saveExpiry").onclick=async()=>{
   const v=$("jobExpiry").value,iso=v?new Date(v).toISOString():null;
   const {error}=await db.from("jobs").update({link_expires_at:iso}).eq("id",j.id);
@@ -70,17 +80,51 @@ function showJobs(id){
 async function showApplicant(id){
  const a=apps.find(x=>x.id===id);if(!a)return;const c=people.find(x=>x.id===a.candidate_id)||{},j=jobs.find(x=>x.id===a.job_id)||{};
  const phone=String(c.whatsapp||"").replace(/\D/g,""),number=phone.length===10||phone.length===11?"55"+phone:phone;
- const age=c.date_of_birth?Math.floor((Date.now()-new Date(c.date_of_birth).getTime())/31557600000):"Não informada";
- open("Triagem — "+c.full_name,'<p class="c360-info">'+safe(regionFlag(c,j))+'<br>É apenas uma comparação de regiões, não uma rota de transporte confirmada.</p><p><b>Vaga:</b> '+safe(j.title)+'<br><b>Residência:</b> '+safe([c.neighborhood,c.city].join(", "))+'<br><b>Idade informada:</b> '+safe(age)+'<br><b>Experiências:</b> '+safe(c.experiences)+'<br><b>Disponibilidade:</b> '+safe(c.availability)+'<br><b>Transporte informado:</b> '+safe(c.transport_description)+'<br><b>Limite de VT informado pela empresa:</b> '+safe(j.daily_transport_limit||"Não informado")+'<br><b>Fretado:</b> '+safe(j.transport_notes||"Não informado")+'</p><div class="c360-actions"><a class="c360btn light" target="_blank" rel="noopener" href="'+safe(route(c,j))+'">Ver ônibus no Google Maps</a>'+(number?'<a class="c360btn light" target="_blank" rel="noopener" href="https://wa.me/'+number+'">WhatsApp do candidato</a>':'')+(a.resume_path?'<button id="downloadApp" class="c360btn light">Abrir currículo</button>':'')+'</div><form id="c360Triagem"><label class="c360-field">Etapa<select name="status"><option value="new">Nova inscrição</option><option value="screening">Em triagem</option><option value="contacted">Contato realizado</option><option value="interview">Entrevista</option><option value="hired">Contratado</option><option value="rejected">Não selecionado</option></select></label><label class="c360-field">Anotações da entrevista<textarea name="interview_notes" maxlength="3000"></textarea></label><label class="c360-field">Custo, linhas, trajeto, fretado e conferência<textarea name="transport_review_notes" maxlength="3000"></textarea></label><label class="c360-field"><input style="width:auto" type="checkbox" name="route_verified"> Conferi o transporte e o trajeto com dados reais</label><button class="c360btn" style="margin-top:20px">Salvar triagem</button></form>');
- const f=$("c360Triagem");f.elements.status.value=a.status;f.elements.interview_notes.value=a.interview_notes||"";f.elements.transport_review_notes.value=a.transport_review_notes||"";f.elements.route_verified.checked=!!a.route_verified;
+ const birth=c.date_of_birth?new Date(c.date_of_birth+'T12:00:00'):null;
+ const now=new Date();
+ const age=birth?now.getFullYear()-birth.getFullYear()-Number(now.getMonth()<birth.getMonth()||(now.getMonth()===birth.getMonth()&&now.getDate()<birth.getDate())):null;
+ const facts=[
+  ['Vaga',[j.title,j.company_name].filter(Boolean).join(' · ')],
+  ['Residência',[c.address,c.neighborhood,c.city].filter(Boolean).join(', ')],
+  ['Idade declarada',age],['Gênero informado',({female:'Feminino',male:'Masculino',nonbinary:'Não binário',other:'Outro'})[c.gender]],
+  ['Experiência na função',yesNo(a.has_experience??c.has_experience)],['Tempo de experiência',a.experience_duration??c.experience_duration],
+  ['Experiências',c.experiences],['Já trabalhou na empresa',yesNo(a.worked_at_company??c.worked_at_company)],
+  ['Disponibilidade',c.availability],['Conduções por trecho',a.transportation_count??c.transportation_count],
+  ['Como chega à empresa',a.access_to_workplace??c.access_to_workplace],['Conduções e custo informados',c.transport_description??a.transport_description],
+  ['Limite diário de VT',j.daily_transport_limit==null?null:Number(j.daily_transport_limit).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})],
+  ['Fretado e observações',j.transport_notes]
+ ];
+ const fields=facts.map(([label,value])=>`<div><dt>${label}</dt><dd>${safe(value==null||value===''?'Não informado':value)}</dd></div>`).join('');
+ open('Triagem · '+(c.full_name||'Candidato'),`
+  <p class="c360-info"><strong>${safe(regionFlag(c,j))}</strong><br>Compare o endereço informado e o trajeto até a empresa no mapa.</p>
+  <dl class="candidate-facts">${fields}</dl>
+  <div class="c360-actions">
+   ${c.city&&(j.address||j.city)?`<a class="c360btn light" target="_blank" rel="noopener noreferrer" href="${safe(route(c,j))}">Ver rota de transporte</a>`:''}
+   ${/^\d{10,15}$/.test(number)?`<a class="c360btn light" target="_blank" rel="noopener noreferrer" href="https://wa.me/${number}">WhatsApp do candidato</a>`:''}
+   ${a.resume_path?'<button id="downloadApp" class="c360btn light">Abrir currículo</button>':''}
+  </div>
+  <form id="c360Triagem">
+   <label class="c360-field">Etapa<select name="status">${Object.entries(statusLabel).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label>
+   <label class="c360-field">Entrevista · data e horário<input name="interview_at" type="datetime-local" value="${localDate(a.interview_at)}"></label>
+   <label class="c360-field">Anotações da entrevista<textarea name="interview_notes" maxlength="3000"></textarea></label>
+   <label class="c360-field">Linhas, custo do trajeto e fretado<textarea name="transport_review_notes" maxlength="3000"></textarea></label>
+   <label class="c360-field"><input style="width:auto" type="checkbox" name="route_verified"> Trajeto conferido pela equipe</label>
+   <p><button class="c360btn">Salvar triagem</button></p>
+  </form>`);
+ const f=$('c360Triagem');
+ f.elements.status.value=a.status;
+ f.elements.interview_notes.value=a.interview_notes||'';
+ f.elements.transport_review_notes.value=a.transport_review_notes||'';
+ f.elements.route_verified.checked=!!a.route_verified;
+ f.elements.status.onchange=()=>{f.elements.interview_at.required=f.elements.status.value==='interview';};
+ f.elements.status.onchange();
  if(a.resume_path)$("downloadApp").onclick=async()=>{const {data,error}=await db.storage.from("curriculos-privados").createSignedUrl(a.resume_path,90);if(error)alert(error.message);else window.open(data.signedUrl,"_blank","noopener")};
- f.onsubmit=async ev=>{ev.preventDefault();const data=new FormData(f),payload={status:data.get("status"),interview_notes:data.get("interview_notes"),transport_review_notes:data.get("transport_review_notes"),route_verified:!!data.get("route_verified")};const r=await db.from("applications").update(payload).eq("id",a.id);if(r.error){alert(r.error.message);return}modal.close();await refresh();alert("Triagem atualizada.")};
+ f.onsubmit=async ev=>{ev.preventDefault();const data=new FormData(f),payload={status:data.get("status"),interview_at:data.get("interview_at")?new Date(data.get("interview_at")).toISOString():null,interview_notes:data.get("interview_notes"),transport_review_notes:data.get("transport_review_notes"),route_verified:!!data.get("route_verified")};const r=await db.from("applications").update(payload).eq("id",a.id).select("id").single();if(r.error){alert(r.error.message);return}modal.close();await refresh();alert("Triagem atualizada.")};
 }
 document.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.c360share){e.stopImmediatePropagation();const j=jobs.find(x=>x.id===b.dataset.c360share);if(j)window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(msg(j)),"_blank","noopener")}
- if(b.dataset.c360copy){e.stopImmediatePropagation();const j=jobs.find(x=>x.id===b.dataset.c360copy);if(j)copy(link(j))}
+ if(b.dataset.c360copy){e.stopImmediatePropagation();const j=jobs.find(x=>x.id===b.dataset.c360copy);if(j)copy(msg(j))}
  if(b.dataset.c360application){e.stopImmediatePropagation();showApplicant(b.dataset.c360application)}
  if(b.dataset.job){e.stopImmediatePropagation();showJobs(b.dataset.job)}
 },true);
-const jobsRoot=document.getElementById('jobsList');if(jobsRoot){new MutationObserver(()=>{if(!document.hidden)refresh()}).observe(jobsRoot,{childList:true})};setInterval(()=>{if(!document.hidden)refresh()},15000);setTimeout(refresh,1200);
