@@ -17,15 +17,35 @@ function classify(text){const t=norm(text);const found=regions.filter(([place])=
  return {city:found[0]?.[0]||"Não identificada",neighborhood:found[1]?.[0]||"",zone:found[0]?.[1]||"Não identificada",professions:roles,main_profession:roles[0]||"Não identificada"};
 }
 let files=[],rows=[],uid=null;const view=$("resumesView");if(!view)throw Error("Não foi possível encontrar a área de currículos");
+let currentPage=1;
+let pageSize=10;
+let loadingResumes=false;
 const shell=view.querySelector(".panel");const prior=shell.innerHTML;
-shell.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Banco de currículos</h3><p class="c360-muted">Organize e busque profissionais por região, profissão, faixa etária e gênero informado.</p></div><button id="c360Import" class="c360btn">＋ Importar currículos</button></div><div class="c360-cards"><div>Currículos<b id="c360Total">0</b></div><div>Regiões<b id="c360Cities">0</b></div><div>Aguardam revisão<b id="c360Reviews">0</b></div></div><div class="c360-controls"><input id="c360Search" placeholder="Pesquisar nome, região ou profissão"><select id="c360City"><option value="">Todas as regiões</option></select><select id="c360Job"><option value="">Todas as profissões</option></select><select id="c360Gender"><option value="">Todos os gêneros</option><option value="female">Feminino</option><option value="male">Masculino</option><option value="nonbinary">Não binário</option><option value="other">Outro</option></select><select id="c360Age"><option value="">Todas as idades</option><option value="18-25">18 a 25</option><option value="26-35">26 a 35</option><option value="36-45">36 a 45</option><option value="46-99">46+</option></select></div><div id="c360List"></div><p class="c360-muted">Cidades e profissões são sugestões automáticas editáveis. A data de nascimento e o gênero não são deduzidos do currículo. Confirme antes de usar qualquer informação.</p>';
+shell.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h3>Banco de currículos</h3><p class="c360-muted">Organize e busque profissionais por região, profissão, faixa etária e gênero informado.</p></div><button id="c360Import" class="c360btn">＋ Importar currículos</button></div><div class="c360-cards"><div>Currículos<b id="c360Total">0</b></div><div>Regiões<b id="c360Cities">0</b></div><div>Aguardam revisão<b id="c360Reviews">0</b></div></div><div class="c360-controls"><input id="c360Search" placeholder="Pesquisar nome, região ou profissão"><select id="c360City"><option value="">Todas as regiões</option></select><select id="c360Job"><option value="">Todas as profissões</option></select><select id="c360Gender"><option value="">Todos os gêneros</option><option value="female">Feminino</option><option value="male">Masculino</option><option value="nonbinary">Não binário</option><option value="other">Outro</option></select><select id="c360Age"><option value="">Todas as idades</option><option value="18-25">18 a 25</option><option value="26-35">26 a 35</option><option value="36-45">36 a 45</option><option value="46-99">46+</option></select><label class="c360-page-size">Por página <select id="c360PageSize"><option value="10">10</option><option value="20">20</option><option value="30">30</option></select></label></div><div id="c360List"></div><nav id="c360Pagination" class="c360-pagination" aria-label="Páginas do banco de currículos" hidden></nav><p class="c360-muted">Cidades e profissões são sugestões automáticas editáveis. A data de nascimento e o gênero não são deduzidos do currículo. Confirme antes de usar qualquer informação.</p>';
 const other=document.createElement("div");other.className="panel";other.innerHTML='<h3>Inscritos nas vagas</h3>'+prior;view.append(other);
 function age(birth){if(!birth)return null;const d=new Date(birth+"T12:00:00");return Number.isFinite(d.getTime())?Math.floor((Date.now()-d.getTime())/31557600000):null}
 function genderName(g){return ({female:"Feminino",male:"Masculino",nonbinary:"Não binário",other:"Outro",prefer_not_to_say:"Prefere não informar"})[g]||"Não informado"}
 async function refresh(){
  const u=await db.auth.getUser();if(!u.data.user)return;uid=u.data.user.id;
- const {data,error}=await db.from("resume_records").select("*").is("deleted_at",null).order("created_at",{ascending:false}).limit(1500);
- if(error){$("c360List").textContent="Erro ao consultar currículos: "+error.message;return}rows=data||[];
+ if(loadingResumes)return;
+ loadingResumes=true;
+ const records=[];
+ try {
+  const batchSize=200;
+  for(let offset=0;;offset+=batchSize){
+   const {data,error}=await db.from("resume_records").select("*").is("deleted_at",null).order("created_at",{ascending:false}).order("id",{ascending:false}).range(offset,offset+batchSize-1);
+   if(error)throw error;
+   records.push(...data);
+   if(data.length<batchSize)break;
+  }
+  rows=records;
+ }catch(error){
+  $("c360List").textContent="Erro ao consultar currículos: "+error.message;
+  $("c360Pagination").hidden=true;
+  return;
+ }finally{
+  loadingResumes=false;
+ }
  $("c360Total").textContent=rows.length;$("c360Cities").textContent=new Set(rows.map(x=>x.city).filter(x=>x&&x!=="Não identificada")).size;
  $("c360Reviews").textContent=rows.filter(x=>x.status==="review").length;
  for(const [id,options,key] of [["c360City",[...new Set(rows.map(x=>x.city))].filter(Boolean),"cidade"],["c360Job",[...new Set(rows.flatMap(x=>x.professions||[]))].filter(Boolean),"profissão"]]){
@@ -40,9 +60,47 @@ function render(){
  &&(!city||r.city===city)&&(!job||(r.professions||[]).includes(job))&&(!gender||r.gender===gender)
  &&(!range||(a!==null&&a>=Number(range.split("-")[0])&&a<=Number(range.split("-")[1])));
  });
- $("c360List").innerHTML='<p class="c360-muted">'+filtered.length+' currículos encontrados</p><div style="overflow:auto"><table class="c360-table"><thead><tr><th>Nome / arquivo</th><th>Região</th><th>Profissão</th><th>Idade</th><th>Gênero</th><th></th></tr></thead><tbody>'+filtered.slice(0,400).map(r=>'<tr><td><b>'+esc(r.full_name||r.source_name)+'</b><br><small>'+esc(r.source_name)+'</small></td><td>'+esc(r.city)+'<br><small>'+esc(r.neighborhood)+'</small></td><td>'+esc(r.main_profession)+'</td><td>'+esc(age(r.birth_date)??"—")+'</td><td>'+esc(genderName(r.gender))+'</td><td><button class="c360btn alt" data-openresume="'+r.id+'">Abrir</button></td></tr>').join("")+'</tbody></table></div>';
+ const pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
+ currentPage=Math.min(currentPage,pageCount);
+ const offset=(currentPage-1)*pageSize;
+ const visible=filtered.slice(offset,offset+pageSize);
+ renderPagination(pageCount);
+ if(!visible.length){
+  $("c360List").innerHTML='<p class="c360-muted" role="status">Nenhum currículo encontrado.</p>';
+  return;
+ }
+ $("c360List").innerHTML='<p class="c360-muted" role="status">Mostrando '+(offset+1)+'–'+(offset+visible.length)+' de '+filtered.length+' currículos</p><div style="overflow:auto"><table class="c360-table"><thead><tr><th>Nome / arquivo</th><th>Região</th><th>Profissão</th><th>Idade</th><th>Gênero</th><th></th></tr></thead><tbody>'+visible.map(r=>'<tr><td><b>'+esc(r.full_name||r.source_name)+'</b><br><small>'+esc(r.source_name)+'</small></td><td>'+esc(r.city)+'<br><small>'+esc(r.neighborhood)+'</small></td><td>'+esc(r.main_profession)+'</td><td>'+esc(age(r.birth_date)??"—")+'</td><td>'+esc(genderName(r.gender))+'</td><td><button class="c360btn alt" data-openresume="'+r.id+'">Abrir</button></td></tr>').join("")+'</tbody></table></div>';
 }
-["c360Search","c360City","c360Job","c360Gender","c360Age"].forEach(id=>$(id).addEventListener(id==="c360Search"?"input":"change",render));
+function renderPagination(pageCount){
+ const nav=$("c360Pagination");
+ nav.hidden=pageCount<=1;
+ if(nav.hidden){nav.replaceChildren();return;}
+ const start=Math.max(1,Math.min(currentPage-2,pageCount-4));
+ const end=Math.min(pageCount,start+4);
+ const buttons=[];
+ const numbered=number=>`<button type="button" class="c360btn alt" data-resume-page="${number}" aria-label="Página ${number}"${number===currentPage?' aria-current="page"':''}>${number}</button>`;
+ if(start>1)buttons.push(numbered(1));
+ if(start>2)buttons.push('<span aria-hidden="true">…</span>');
+ for(let number=start;number<=end;number++)buttons.push(numbered(number));
+ if(end<pageCount-1)buttons.push('<span aria-hidden="true">…</span>');
+ if(end<pageCount)buttons.push(numbered(pageCount));
+ nav.innerHTML=`<button type="button" class="c360btn alt" data-resume-page="${currentPage-1}" ${currentPage===1?'disabled':''}>Anterior</button>`+buttons.join('')+`<button type="button" class="c360btn alt" data-resume-page="${currentPage+1}" ${currentPage===pageCount?'disabled':''}>Próxima</button>`;
+}
+$("c360Pagination").addEventListener("click",event=>{
+ const button=event.target.closest("[data-resume-page]");
+ if(!button||button.disabled)return;
+ currentPage=Number(button.dataset.resumePage);
+ render();
+ $("c360Pagination").querySelector('[aria-current="page"]')?.focus({preventScroll:true});
+ $("c360List").scrollIntoView({block:"start"});
+});
+["c360Search","c360City","c360Job","c360Gender","c360Age","c360PageSize"].forEach(id=>{
+ $(id).addEventListener(id==="c360Search"?"input":"change",()=>{
+  pageSize=Number($("c360PageSize").value);
+  currentPage=1;
+  render();
+ });
+});
 async function readDocument(file){
  const name=file.name.toLowerCase();
  if(name.endsWith(".pdf")){

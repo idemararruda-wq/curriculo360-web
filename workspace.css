@@ -64,3 +64,8 @@ dialog:has(#c360Triagem), dialog:has(#mgBody) { color: #191c38; }
 #app .training-lessons a, #app .training-player a { display: inline-block; padding: 8px; color: #4e329c; }
 #app .training-player { width: min(800px,calc(100% - 28px)); }
 #app .training-player iframe { display: block; width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 12px; margin: 12px 0; background: #181329; }
+#app .c360-page-size { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-weight: 650; }
+#app .c360-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 15px; }
+#app .c360-pagination[hidden] { display: none; }
+#app .c360-pagination [aria-current="page"] { background: #5940bc; color: white; }
+#app #c360List { scroll-margin-top: 14px; }
