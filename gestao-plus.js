@@ -3,7 +3,7 @@ import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
 const db=createClient("https://rqbmcnczfnfabsgiuvcs.supabase.co","sb_publishable_BrHgJVI8ooHwbV5rbqYVxg_6vRmOzjz");
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=v=>v?new Date(new Date(v).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):"";
-const dialog=document.createElement("dialog");dialog.style.cssText="width:min(780px,95vw);max-height:90vh;overflow:auto;border:0;border-radius:16px;padding:25px;box-shadow:0 20px 80px #08142b66";dialog.innerHTML='<div style="display:flex;justify-content:space-between"><h2 id="mgTitle"></h2><button id="mgClose">Fechar</button></div><div id="mgBody"></div>';document.body.append(dialog);
+const dialog=document.createElement("dialog");dialog.style.cssText="width:min(780px,95vw);max-height:90vh;overflow:auto;border:0;border-radius:16px;padding:25px;box-shadow:0 20px 80px #08142b66";dialog.innerHTML='<div style="display:flex;justify-content:space-between"><h2 id="mgTitle"></h2><button id="mgClose" type="button" class="btn-small back-button"><span aria-hidden="true">←</span> Voltar</button></div><div id="mgBody"></div>';document.body.append(dialog);
 document.getElementById("mgClose").onclick=()=>dialog.close();
 const body=()=>document.getElementById("mgBody");
 const field=(label,key,val="",type="text")=>'<label style="display:block;font-weight:700;margin:13px 0">'+esc(label)+'<input style="display:block;width:100%;padding:12px;border:1px solid #d9ddec;border-radius:9px;margin-top:5px" name="'+key+'" type="'+type+'"'+(type==='number'?' min="0" step="0.01"':'')+' value="'+esc(val)+'"></label>';

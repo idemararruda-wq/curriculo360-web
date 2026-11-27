@@ -4,8 +4,22 @@ const db=createClient("https://rqbmcnczfnfabsgiuvcs.supabase.co","sb_publishable
 const $=s=>document.getElementById(s);
 const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const css=document.createElement("style");css.textContent=".c360btn{background:#6953d8;color:#fff;padding:9px 13px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}.c360btn.light{background:#eeeafe;color:#5842b0}.c360modal{border:0;border-radius:15px;padding:24px;width:min(770px,94vw);max-height:90vh;overflow:auto;box-shadow:0 12px 70px #070f2866}.c360modal::backdrop{background:#10142db0}.c360meta{font-size:12px;color:#8590a8}.c360-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.c360-field{display:block;font-size:12px;font-weight:bold;margin-top:16px}.c360-field textarea,.c360-field input,.c360-field select{width:100%;padding:12px;border:1px solid #d9e0ef;border-radius:9px;margin-top:7px}.c360-info{background:#f3f0ff;color:#5c4ba4;padding:12px;border-radius:8px;line-height:1.6}.c360-card{border-bottom:1px solid #e5eafa;padding:15px 0}.c360-status{color:#6551c5;font-weight:bold;font-size:12px}";document.head.append(css);
-const modal=document.createElement("dialog");modal.className="c360modal";modal.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 id="c360Title">Detalhes</h2><button id="c360Close" class="c360btn light">Fechar</button></div><div id="c360Body"></div>';document.body.append(modal);$("c360Close").onclick=()=>modal.close();
-function open(title,html){$("c360Title").textContent=title;$("c360Body").innerHTML=html;modal.showModal()}
+const modal=document.createElement("dialog");modal.className="c360modal";modal.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 id="c360Title">Detalhes</h2><button id="c360Close" type="button" class="c360btn light back-button"><span aria-hidden="true">←</span> Voltar</button></div><div id="c360Body"></div>';document.body.append(modal);let activeJob=null;
+let returnToJob=null;
+function goBack(){
+ if(returnToJob){
+  const {jobId,applicationId,scrollTop}=returnToJob;
+  showJobs(jobId);
+  $("c360Body").querySelector(`[data-c360application="${CSS.escape(applicationId)}"]`)?.focus({preventScroll:true});
+  modal.scrollTop=scrollTop;
+  return;
+ }
+ modal.close();
+}
+$("c360Close").onclick=goBack;
+modal.addEventListener("cancel",event=>{event.preventDefault();goBack();});
+modal.addEventListener("close",()=>{activeJob=null;returnToJob=null;});
+function open(title,html){$("c360Title").textContent=title;$("c360Body").innerHTML=html;if(!modal.open)modal.showModal();modal.scrollTop=0}
 const link=j=>new URL("candidatura.html?vaga="+encodeURIComponent(j.id),location.href).href;
 const msg=j=>{
  const p=[
@@ -59,6 +73,8 @@ const yesNo=value=>value===true?'Sim':value===false?'Não':'Não informado';
 const localDate=value=>value?new Date(new Date(value).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'';
 function showJobs(id){
  const j=jobs.find(j=>j.id===id);if(!j)return;
+ activeJob=id;
+ returnToJob=null;
  const all=apps.filter(a=>a.job_id===id).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
  open("Candidaturas — "+j.title,'<p class="c360meta">'+safe(j.city||"")+' • '+all.length+' inscrição(ões)</p><div class="c360-info">Um link pode ser encaminhado por outras pessoas. Use prazo de inscrição e encerre a vaga quando quiser bloquear novas candidaturas.</div><div class="c360-actions"><button class="c360btn" id="sendVaga">Divulgar no WhatsApp</button><button class="c360btn light" id="copyVaga">Copiar anúncio</button><button class="c360btn light" id="closeVaga">Encerrar inscrições</button></div><label class="c360-field">Prazo final para inscrições (opcional)<input id="jobExpiry" type="datetime-local" value="'+(j.link_expires_at?new Date(new Date(j.link_expires_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):'')+'"></label><button class="c360btn light" id="saveExpiry">Salvar prazo</button><h3>Candidatos desta vaga</h3>'+all.map(a=>{const c=people.find(x=>x.id===a.candidate_id)||{};return '<div class="c360-card"><b>'+safe(c.full_name)+'</b><div class="c360meta">'+safe([c.neighborhood,c.city].filter(Boolean).join(", "))+' • '+safe(statusLabel[a.status]||a.status)+'</div><div class="c360-status">'+safe(regionFlag(c,j))+'</div><button class="c360btn light" data-c360application="'+a.id+'">Abrir ficha / triagem</button></div>'}).join('')+(all.length?'':'<p>Nenhuma inscrição ainda.</p>'));
  $("sendVaga").disabled=j.status!=="open";
@@ -78,7 +94,8 @@ function showJobs(id){
  };
 }
 async function showApplicant(id){
- const a=apps.find(x=>x.id===id);if(!a)return;const c=people.find(x=>x.id===a.candidate_id)||{},j=jobs.find(x=>x.id===a.job_id)||{};
+ const a=apps.find(x=>x.id===id);if(!a)return;
+ returnToJob=modal.open&&activeJob?{jobId:activeJob,applicationId:id,scrollTop:modal.scrollTop}:null;const c=people.find(x=>x.id===a.candidate_id)||{},j=jobs.find(x=>x.id===a.job_id)||{};
  const phone=String(c.whatsapp||"").replace(/\D/g,""),number=phone.length===10||phone.length===11?"55"+phone:phone;
  const birth=c.date_of_birth?new Date(c.date_of_birth+'T12:00:00'):null;
  const now=new Date();
@@ -119,7 +136,7 @@ async function showApplicant(id){
  f.elements.status.onchange=()=>{f.elements.interview_at.required=f.elements.status.value==='interview';};
  f.elements.status.onchange();
  if(a.resume_path)$("downloadApp").onclick=async()=>{const {data,error}=await db.storage.from("curriculos-privados").createSignedUrl(a.resume_path,90);if(error)alert(error.message);else window.open(data.signedUrl,"_blank","noopener")};
- f.onsubmit=async ev=>{ev.preventDefault();const data=new FormData(f),payload={status:data.get("status"),interview_at:data.get("interview_at")?new Date(data.get("interview_at")).toISOString():null,interview_notes:data.get("interview_notes"),transport_review_notes:data.get("transport_review_notes"),route_verified:!!data.get("route_verified")};const r=await db.from("applications").update(payload).eq("id",a.id).select("id").single();if(r.error){alert(r.error.message);return}modal.close();await refresh();alert("Triagem atualizada.")};
+ f.onsubmit=async ev=>{ev.preventDefault();const data=new FormData(f),payload={status:data.get("status"),interview_at:data.get("interview_at")?new Date(data.get("interview_at")).toISOString():null,interview_notes:data.get("interview_notes"),transport_review_notes:data.get("transport_review_notes"),route_verified:!!data.get("route_verified")};const r=await db.from("applications").update(payload).eq("id",a.id).select("id").single();if(r.error){alert(r.error.message);return}await refresh();goBack();alert("Triagem atualizada.")};
 }
 document.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;

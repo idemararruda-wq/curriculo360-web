@@ -37,3 +37,7 @@ dialog:has(#c360Triagem), dialog:has(#mgBody) { color: #191c38; }
 #c360Body .candidate-facts dt { font-size: 13px; color: #514975; font-weight: 750; }
 #c360Body .candidate-facts dd { margin: 5px 0 0; white-space: pre-line; }
 @media (max-width: 600px) { #jobForm, #mgJobForm { grid-template-columns: 1fr; } #app .topbar { align-items: flex-start; } #app .stat-number { margin: 10px 0; } }
+.workspace-location { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.back-button { white-space: nowrap; }
+#app #jobFormWrap > .row { margin-bottom: 14px; }
+#app #jobFormWrap > .row h3 { margin: 0; }
