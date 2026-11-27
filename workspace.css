@@ -54,3 +54,13 @@ dialog:has(#c360Triagem), dialog:has(#mgBody) { color: #191c38; }
 #app .help-panel ol { padding-inline-start: 24px; }
 #app .help-panel li + li { margin-top: 9px; }
 #app .help-panel blockquote { margin: 0; padding: 12px 15px; background: #f5f2fd; border-radius: 10px; }
+#app .workspace-dialog { width: min(480px,calc(100% - 28px)); max-height: 90dvh; padding: clamp(20px,5vw,36px); border: 1px solid #e2d8f6; border-radius: 22px; color: #211537; background: #fcfaff; box-shadow: 0 26px 90px #27144266; }
+#app .workspace-dialog::backdrop { background: #1a123b9c; }
+#app .workspace-dialog h2 { margin: 6px 0 12px; font-size: clamp(22px,4vw,32px); }
+#app .workspace-dialog p { margin: 0 0 22px; line-height: 1.65; }
+#app .training-lessons { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 14px; }
+#app .training-lessons .panel { margin: 0; line-height: 1.6; }
+#app .training-lessons h2 { margin-top: 0; font-size: 21px; }
+#app .training-lessons a, #app .training-player a { display: inline-block; padding: 8px; color: #4e329c; }
+#app .training-player { width: min(800px,calc(100% - 28px)); }
+#app .training-player iframe { display: block; width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 12px; margin: 12px 0; background: #181329; }
