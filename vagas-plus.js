@@ -1,3 +1,4 @@
+import { printRecord, printResume } from './impressao.js';
 
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm";
 const db=createClient("https://rqbmcnczfnfabsgiuvcs.supabase.co","sb_publishable_BrHgJVI8ooHwbV5rbqYVxg_6vRmOzjz");
@@ -118,7 +119,8 @@ async function showApplicant(id){
   <div class="c360-actions">
    ${c.city&&(j.address||j.city)?`<a class="c360btn light" target="_blank" rel="noopener noreferrer" href="${safe(route(c,j))}">Ver rota de transporte</a>`:''}
    ${/^\d{10,15}$/.test(number)?`<a class="c360btn light" target="_blank" rel="noopener noreferrer" href="https://wa.me/${number}">WhatsApp do candidato</a>`:''}
-   ${a.resume_path?'<button id="downloadApp" class="c360btn light">Abrir currículo</button>':''}
+   <button id="printApplication" type="button" class="c360btn light">Imprimir ficha</button>
+   ${a.resume_path?'<button id="downloadApp" class="c360btn light">Abrir currículo</button><button id="printApplicationResume" type="button" class="c360btn light">Imprimir currículo</button>':'<span class="c360meta">Sem currículo anexado</span>'}
   </div>
   <form id="c360Triagem">
    <label class="c360-field">Etapa<select name="status">${Object.entries(statusLabel).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label>
@@ -135,6 +137,13 @@ async function showApplicant(id){
  f.elements.route_verified.checked=!!a.route_verified;
  f.elements.status.onchange=()=>{f.elements.interview_at.required=f.elements.status.value==='interview';};
  f.elements.status.onchange();
+ $('printApplication').onclick=()=>printRecord('Ficha de candidatura · '+(c.full_name||'Candidato'),[
+  ['Nome',c.full_name],['WhatsApp',c.whatsapp],['E-mail',c.email],
+  ['Etapa registrada',statusLabel[a.status]||a.status],
+  ['Entrevista',a.interview_at?new Date(a.interview_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):null],
+  ...facts,['Anotações da entrevista',a.interview_notes],['Conferência do transporte',a.transport_review_notes]
+ ]);
+ if(a.resume_path)$('printApplicationResume').onclick=()=>printResume(db,a.resume_path);
  if(a.resume_path)$("downloadApp").onclick=async()=>{const {data,error}=await db.storage.from("curriculos-privados").createSignedUrl(a.resume_path,90);if(error)alert(error.message);else window.open(data.signedUrl,"_blank","noopener")};
  f.onsubmit=async ev=>{ev.preventDefault();const data=new FormData(f),payload={status:data.get("status"),interview_at:data.get("interview_at")?new Date(data.get("interview_at")).toISOString():null,interview_notes:data.get("interview_notes"),transport_review_notes:data.get("transport_review_notes"),route_verified:!!data.get("route_verified")};const r=await db.from("applications").update(payload).eq("id",a.id).select("id").single();if(r.error){alert(r.error.message);return}await refresh();goBack();alert("Triagem atualizada.")};
 }
