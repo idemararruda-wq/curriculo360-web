@@ -26,7 +26,7 @@ async function editApplication(id){
  const {data:a,error}=await db.from("applications").select("*").eq("id",id).single();if(error){alert(error.message);return}
  const c=await db.from("candidates").select("*").eq("id",a.candidate_id).single();if(c.error){alert(c.error.message);return}
  const s=[["new","Novo"],["screening","Em triagem"],["contacted","Contato feito"],["interview","Entrevista agendada"],["interviewed","Entrevistado"],["hired","Contratado"],["rejected","Não selecionado"]];
- let html='<form id="mgAppForm"><h3>Dados do candidato</h3>'+field("Nome","full_name",c.data.full_name)+field("WhatsApp","whatsapp",c.data.whatsapp)+field("Cidade","city",c.data.city)+field("Bairro","neighborhood",c.data.neighborhood)+field("Experiências","experiences",c.data.experiences||"")+
+ let html='<form id="mgAppForm"><h3>Dados do candidato</h3>'+field("Nome","full_name",c.data.full_name)+field("WhatsApp","whatsapp",c.data.whatsapp)+field("Cidade","city",c.data.city)+field("Bairro","neighborhood",c.data.neighborhood)+field("Endereço","address",c.data.address)+field("Experiências","experiences",c.data.experiences||"")+
  '<h3>Etapas de recrutamento</h3><label>Etapa<select name="status" style="display:block;padding:12px;width:100%">'+s.map(([v,t])=>'<option value="'+v+'">'+t+'</option>').join("")+'</select></label>'+
  field("Entrevista — data e horário","interview_at",fmt(a.interview_at),"datetime-local")+
  field("Integração — data e horário","onboarding_at",fmt(a.onboarding_at),"datetime-local")+
@@ -37,7 +37,7 @@ async function editApplication(id){
  show("Editar candidatura",html);
  const form=document.getElementById("mgAppForm");form.elements.status.value=a.status;
  form.onsubmit=async e=>{e.preventDefault();const f=new FormData(form);
-  const cd={full_name:f.get("full_name"),whatsapp:f.get("whatsapp"),city:f.get("city"),neighborhood:f.get("neighborhood"),experiences:f.get("experiences")};
+  const cd={full_name:f.get("full_name"),whatsapp:f.get("whatsapp"),city:f.get("city"),neighborhood:f.get("neighborhood"),address:f.get("address")||null,experiences:f.get("experiences")};
   const ad={status:f.get("status"),interview_at:f.get("interview_at")?new Date(f.get("interview_at")).toISOString():null,onboarding_at:f.get("onboarding_at")?new Date(f.get("onboarding_at")).toISOString():null,employment_start_date:f.get("employment_start_date")||null,hiring_company:f.get("hiring_company"),interviewer_name:f.get("interviewer_name"),interview_notes:f.get("interview_notes"),updated_at:new Date().toISOString()};
   const rc=await db.from("candidates").update(cd).eq("id",a.candidate_id).select("id").single();if(rc.error){alert(rc.error.message);return}
   const ra=await db.from("applications").update(ad).eq("id",id).select("id").single();if(ra.error){alert(ra.error.message);return}

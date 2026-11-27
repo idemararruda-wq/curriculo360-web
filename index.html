@@ -19,6 +19,10 @@
 <section id="teamView" class="view hidden"><div class="section-head"><div><div class="eyebrow">CONTROLE DE ACESSO</div><h1>Sua equipe.</h1><p>Usuários autorizados pela administração.</p></div></div><div class="panel"><p>Novos recrutadores precisam criar uma conta online e ser habilitados pelo administrador.</p><div id="teamList"></div></div></section>
 <p class="muted" id="notice" role="status"></p></div></main></div>
 <script type="module">
+import './vagas-plus.js';
+import './curriculos-plus.js';
+import './gestao-plus.js';
+import './lixeira-plus.js';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const db=createClient('https://rqbmcnczfnfabsgiuvcs.supabase.co','sb_publishable_BrHgJVI8ooHwbV5rbqYVxg_6vRmOzjz');
 const E=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -101,4 +105,4 @@ E('jobSearch').oninput=renderJobs;
 E('jobStatus').onchange=renderJobs;
 document.addEventListener('c360-refresh',refresh);
 const {data}=await db.auth.getUser();if(data.user)await authorize(data.user);
-</script><script type="module" src="vagas-plus.js"></script><script type="module" src="curriculos-plus.js"></script><script type="module" src="gestao-plus.js"></script><script type="module" src="lixeira-plus.js"></script></body></html>
+</script></body></html>
