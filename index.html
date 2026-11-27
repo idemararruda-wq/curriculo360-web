@@ -10,15 +10,117 @@
 <div id="auth" class="auth-layout"><section class="auth-brand"><div class="brand-lockup"><div class="logo">✦</div><span>currículo<span class="brand-accent">360</span><small>GESTÃO DE CURRÍCULOS</small></span></div><div class="auth-hero"><div class="eyebrow"><span class="pulse-dot"></span> SEU NOVO CENTRO DE RECRUTAMENTO</div><h1>Talentos certos.<br><em>Nas regiões certas.</em></h1><p>Importe currículos, encontre profissionais por localização e profissão e mantenha sua operação de recrutamento organizada.</p><div class="auth-features"><span>✓ Importação inteligente</span><span>✓ Gestão por região</span><span>✓ Acesso protegido</span></div></div><div class="auth-footer">Organização para quem conecta pessoas a oportunidades.</div></section>
 <section class="auth-panel"><div class="auth-card"><div class="mobile-brand">✦ currículo360</div><div class="overline">ACESSO AO SISTEMA</div><h2 id="authTitle">Bem-vindo de volta</h2><p id="authSubtitle">Entre com suas credenciais para continuar.</p>
 <form id="authForm"><div id="nameWrap" class="field hidden"><label>Nome completo</label><input id="authName" autocomplete="name" placeholder="Seu nome completo"></div><div class="field"><label>E-mail profissional</label><input id="authEmail" type="email" autocomplete="email" required placeholder="voce@agencia.com.br"></div><div class="field"><label>Senha</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Sua senha"></div><div id="authError" class="form-error hidden" role="status"></div><button class="btn primary wide" type="submit"><span id="submitText">Entrar na plataforma</span><span>→</span></button></form><div class="auth-alt"><button id="toggleSignup" type="button" class="link-button">Criar minha conta online</button></div><div class="auth-caption">♢ Seus dados ficam protegidos na nuvem. Acesso aos currículos somente para usuários autorizados.</div></div></section></div>
-<div id="app" class="workspace hidden"><aside class="sidebar"><div class="sidebar-brand"><div class="logo">✦</div><span>currículo<span class="brand-accent">360</span><small>GESTÃO DE CURRÍCULOS</small></span></div><div class="sidebar-section-title">ESPAÇO DE TRABALHO</div><nav class="navigation"><button class="nav-link active" data-view="dashboard">▦　Visão geral</button><button class="nav-link" data-view="jobs">▣　Vagas e inscrições</button><button class="nav-link" data-view="resumes">▤　Banco de currículos</button><button class="nav-link" data-view="team">♙　Equipe e acessos</button></nav><div class="identity"><div><strong id="sidebarName">Recrutador</strong><small>Currículo360 online</small></div><button id="logoutBtn" class="logout">Sair</button></div></aside>
+<div id="app" class="workspace hidden"><aside class="sidebar"><div class="sidebar-brand"><div class="logo">✦</div><span>currículo<span class="brand-accent">360</span><small>GESTÃO DE CURRÍCULOS</small></span></div><div class="sidebar-section-title">ESPAÇO DE TRABALHO</div><nav class="navigation"><button class="nav-link active" data-view="dashboard">▦　Visão geral</button><button class="nav-link" data-view="jobs">▣　Vagas e inscrições</button><button class="nav-link" data-view="resumes">▤　Banco de currículos</button><button class="nav-link" data-view="team">♙　Equipe e acessos</button><button class="nav-link" data-view="help">?　Central de Ajuda</button></nav><div class="identity"><div><strong id="sidebarName">Recrutador</strong><small>Currículo360 online</small></div><button id="logoutBtn" class="logout">Sair</button></div></aside>
 <main class="main"><header class="topbar"><div class="workspace-location"><button id="workspaceBack" class="btn-small back-button hidden" type="button"><span aria-hidden="true">←</span> Voltar</button><div class="breadcrumbs"><strong id="breadcrumb">Visão geral</strong></div></div><button id="topImport" class="btn primary" type="button">＋ Importar currículos</button></header><div class="main-content">
-<section id="dashboardView" class="view"><div class="section-head"><div><div class="eyebrow">PANORAMA DA OPERAÇÃO</div><h1>Bem-vindo, <span id="greetingName">recrutador</span>.</h1><p>Seus talentos, regiões e oportunidades em um só lugar.</p></div></div><div class="stats-grid"><article class="stat-card"><div class="stat-top">Total de candidatos</div><div class="stat-number" id="statTotal">0</div><div class="stat-bottom">Profissionais cadastrados</div></article><article class="stat-card"><div class="stat-top">Vagas abertas</div><div class="stat-number" id="statJobs">0</div><div class="stat-bottom">Oportunidades ativas</div></article><article class="stat-card"><div class="stat-top">Aguardando triagem</div><div class="stat-number" id="statReview">0</div><div class="stat-bottom">Novas candidaturas recebidas</div></article></div>
+<section id="dashboardView" class="view"><div class="section-head"><div><div class="eyebrow">PANORAMA DA OPERAÇÃO</div><h1 id="greetingName">Bem-vindo!</h1><p>Seus talentos, regiões e oportunidades em um só lugar.</p></div></div><aside class="dashboard-message" aria-label="Mensagem do dia"><p id="dailyMessage"></p></aside><div class="stats-grid"><article class="stat-card"><div class="stat-top">Total de candidatos</div><div class="stat-number" id="statTotal">0</div><div class="stat-bottom">Profissionais cadastrados</div></article><article class="stat-card"><div class="stat-top">Vagas abertas</div><div class="stat-number" id="statJobs">0</div><div class="stat-bottom">Oportunidades ativas</div></article><article class="stat-card"><div class="stat-top">Aguardando triagem</div><div class="stat-number" id="statReview">0</div><div class="stat-bottom">Novas candidaturas recebidas</div></article></div>
 <article class="panel"><div class="overline">INSCRIÇÕES RECEBIDAS · ATUALIZAÇÃO AUTOMÁTICA</div><h3>Central de candidaturas <span class="live-dot">● AO VIVO</span></h3><div class="live-stats"><div><span>Total de candidaturas</span><strong id="liveTotal">0</strong></div><div><span>Aguardando triagem</span><strong id="liveNew">0</strong></div></div><div id="liveJobs"></div><h4 id="recentTitle">Últimas inscrições</h4><div id="liveRecent"></div><p class="muted tiny">Atualização automática enquanto o painel estiver aberto.</p></article></section>
 <section id="jobsView" class="view hidden"><div class="section-head"><div><div class="eyebrow">RECRUTAMENTO EM TEMPO REAL</div><h1>Vagas e inscrições</h1><p>Cadastre vagas e acompanhe as inscrições.</p></div><button id="createJob" class="btn primary" type="button" aria-controls="jobFormWrap" aria-expanded="false">＋ Criar vaga</button></div><div id="jobFormWrap" class="panel admin-form hidden"><div class="row"><h3>Nova vaga</h3><button id="jobBack" class="btn-small back-button" type="button"><span aria-hidden="true">←</span> Voltar à lista</button></div><form id="jobForm"><div class="field"><label>Cargo</label><input name="title" required></div><div class="field"><label>Empresa<input name="company_name"></label></div><div class="field"><label>Código da vaga<input name="job_code"></label></div><div class="field"><label>WhatsApp da seleção<input type="tel" name="contact_whatsapp"></label></div><div class="field"><label>Cidade</label><input name="city"></div><div class="field"><label>Bairro</label><input name="neighborhood"></div><div class="field"><label>Salário</label><input name="salary_description"></div><div class="field"><label>Horário<input name="schedule_description"></label></div><div class="field"><label>Turnos, separados por vírgulas<input name="shift_options"></label></div><div class="field"><label>Escala<input name="work_scale"></label></div><div class="field"><label>Início previsto<input name="starts_on" type="date"></label></div><div class="field span-all"><label>Benefícios<textarea name="benefits_description"></textarea></label></div><div class="field"><label>Regiões atendidas, separadas por vírgulas</label><input name="accepted_regions"></div><div class="field span-all"><label>Requisitos<textarea name="requirements"></textarea></label></div><div class="field"><label>Endereço ou referência da empresa</label><input name="address" placeholder="Rua, número, cidade"></div><div class="field span-all"><label>Descrição da vaga<textarea name="description"></textarea></label></div><div class="field"><label>Transporte oferecido</label><select name="transportation_type"><option value="verify">A verificar</option><option value="public_transit">Vale-transporte</option><option value="charter">Fretado</option><option value="both">Vale-transporte e fretado</option></select></div><div class="field"><label>Limite diário de VT, se houver (R$)</label><input name="daily_transport_limit" type="number" step=".01" min="0" placeholder="Ex.: 20.00"></div><div class="field"><label>Fretado, linhas ou observações de transporte</label><textarea name="transport_notes"></textarea></div><div class="field"><label>Status</label><select name="status"><option value="draft">Rascunho</option><option value="open">Aberta</option></select></div><button class="btn primary">Salvar vaga</button></form></div><div class="panel"><div class="job-toolbar"><input id="jobSearch" type="search" aria-label="Buscar vagas" placeholder="Buscar por vaga, empresa, cidade ou código"><select id="jobStatus" aria-label="Status da vaga"><option value="">Todos os status</option><option value="open">Abertas</option><option value="draft">Rascunhos</option><option value="closed">Encerradas</option></select></div><div id="jobsList"></div></div></section>
 <section id="resumesView" class="view hidden"><div class="section-head"><div><div class="eyebrow">BANCO DE TALENTOS</div><h1>Currículos.</h1><p>Consulta de candidatos autorizados.</p></div></div><div class="panel"><div id="candidatesList"></div></div></section>
 <section id="teamView" class="view hidden"><div class="section-head"><div><div class="eyebrow">CONTROLE DE ACESSO</div><h1>Sua equipe.</h1><p>Usuários autorizados pela administração.</p></div></div><div class="panel"><p>Novos recrutadores precisam criar uma conta online e ser habilitados pelo administrador.</p><div id="teamList"></div></div></section>
+<section id="helpView" class="view hidden help-view">
+  <div class="section-head">
+    <div>
+      <h1>Central de Ajuda</h1>
+      <p>Aprenda a usar o Currículo360 e conduza uma seleção da abertura da vaga até a contratação.</p>
+    </div>
+  </div>
+  <nav class="help-index" aria-label="Conteúdo da Central de Ajuda">
+    <a href="#help-tool">Como usar o Currículo360</a>
+    <a href="#help-recruiting">Manual de recrutamento</a>
+    <a href="#help-interview">Roteiro de entrevista</a>
+  </nav>
+  <article id="help-tool" class="panel help-panel">
+    <h2>Como usar o Currículo360</h2>
+    <details open>
+      <summary>Criar, editar e divulgar uma vaga</summary>
+      <ol>
+        <li>Em <strong>Vagas e inscrições</strong>, clique em <strong>Criar vaga</strong>. Preencha cargo, empresa, cidade, endereço, horário, requisitos, regiões atendidas e condições de transporte.</li>
+        <li>Escolha <strong>Rascunho</strong> para preparar a vaga ou <strong>Aberta</strong> para receber inscrições. Clique em <strong>Salvar vaga</strong>.</li>
+        <li>Use <strong>Editar vaga</strong> para corrigir dados e publicar um rascunho. Em <strong>Ver inscrições</strong>, você pode definir um prazo ou encerrar as inscrições.</li>
+        <li>Com a vaga aberta, clique em <strong>WhatsApp</strong> para abrir o anúncio com o link. Escolha o grupo ou contato e envie a mensagem. O candidato preenche a ficha pelo link e vê a confirmação na tela.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Acompanhar inscrições e fazer a triagem</summary>
+      <ol>
+        <li>Na <strong>Visão geral</strong>, abra uma das últimas inscrições. Para ver a lista de uma vaga, entre em <strong>Vagas e inscrições</strong> e clique em <strong>Ver inscrições</strong>.</li>
+        <li>Em <strong>Abrir ficha</strong>, confira experiência, disponibilidade, residência e transporte. Abra o currículo anexado, quando houver, e compare os dados com os requisitos da vaga.</li>
+        <li>Use <strong>Ver rota de transporte</strong> para conferir o trajeto no mapa. Valide linhas, horários e custos com o candidato antes de marcar o trajeto como conferido.</li>
+        <li>Escolha a etapa, registre o motivo ou o próximo passo nas anotações e clique em <strong>Salvar triagem</strong>.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Fazer contato, agendar entrevista e registrar o resultado</summary>
+      <ol>
+        <li>Na ficha, clique em <strong>WhatsApp do candidato</strong>. Identifique-se, diga qual é a vaga e combine a data, o horário e o local da entrevista.</li>
+        <li>Marque <strong>Entrevista agendada</strong>, informe a data e o horário e salve. Depois da conversa, atualize para <strong>Entrevista feita</strong> e registre o resultado.</li>
+        <li>No editor da ficha completa, você pode corrigir os dados do candidato ou registrar empresa contratante, integração e início no trabalho.</li>
+        <li>Atualize a etapa para <strong>Contratado</strong> ou <strong>Reprovado</strong> conforme a decisão. Use <strong>← Voltar</strong> para retornar à lista.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Salvar, encontrar, editar e restaurar currículos</summary>
+      <ol>
+        <li>Em <strong>Banco de currículos</strong>, clique em <strong>Importar currículos</strong>. Selecione os PDFs ou DOCXs baixados no seu dispositivo, com até 3 MB por arquivo, e inicie a importação.</li>
+        <li>Revise os registros com classificação pendente. Use a busca ou os filtros por região e profissão para encontrar o currículo.</li>
+        <li>Abra o registro para corrigir dados como nome, telefone, cidade e profissão. Salve as alterações na ficha.</li>
+        <li>Para arquivar um registro, abra a ficha e use <strong>Mover para lixeira</strong>. Abra a <strong>Lixeira</strong> no banco de currículos e use <strong>Restaurar</strong> se precisar recuperá-lo.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Liberar acesso e acompanhar a equipe</summary>
+      <ol>
+        <li>Peça à pessoa para abrir a tela inicial e clicar em <strong>Criar minha conta online</strong>. Ela deve usar o próprio e-mail e confirmar o cadastro se receber a mensagem de confirmação.</li>
+        <li>Com uma conta de administrador, abra <strong>Equipe e acessos</strong>, localize a pessoa e clique em <strong>Autorizar</strong>. Para retirar o acesso, use <strong>Desativar</strong>.</li>
+        <li>No controle de recrutadores, consulte os agendamentos, as entrevistas feitas e as contratações registradas nos últimos 30 dias.</li>
+      </ol>
+    </details>
+  </article>
+  <article id="help-recruiting" class="panel help-panel">
+    <h2>Manual de recrutamento para agências</h2>
+    <p>Use as mesmas exigências essenciais e perguntas principais para todas as pessoas da mesma vaga. Assim você consegue comparar exemplos de trabalho e registrar o motivo da decisão.</p>
+    <details open>
+      <summary>Prepare a vaga com a empresa</summary>
+      <p>Confirme o que a pessoa fará no dia a dia, o que precisa saber no primeiro turno e o que pode aprender com treinamento. Alinhe salário, escala, endereço, início e quantidade de posições. Combine quem decide e quando a agência dará retorno.</p>
+    </details>
+    <details>
+      <summary>Atraia candidaturas que façam sentido</summary>
+      <p>Divulgue nos grupos da região e nos canais em que profissionais da função procuram trabalho. Escreva o título que eles usam nas buscas e deixe claros horário, local, tipo de contrato e formas de chegar à empresa. Acompanhe de quais canais chegam candidaturas que avançam para entrevista.</p>
+    </details>
+    <details>
+      <summary>Leia a ficha antes de entrar em contato</summary>
+      <ol>
+        <li>Confira cada requisito indispensável e anote onde encontrou a evidência. Para operador logístico, por exemplo, procure as tarefas realizadas, os equipamentos utilizados e o nível de autonomia.</li>
+        <li>Marque o que precisa de confirmação. Se a ficha diz “experiência em logística”, pergunte se a pessoa atuou com separação, conferência, inventário ou expedição.</li>
+        <li>Converse sobre turno, trajeto e início. Use a disponibilidade efetiva e as evidências ligadas ao trabalho para avaliar a aderência. Preserve a privacidade dos dados da ficha.</li>
+      </ol>
+    </details>
+    <details>
+      <summary>Registre evidências e tome a decisão</summary>
+      <p>Para cada requisito, use <strong>Atende</strong>, <strong>A confirmar</strong> ou <strong>Não atende</strong>. Cite um fato que sustente a avaliação e indique o próximo passo. Exemplo de registro: “Descreveu conferência de notas e tratamento de divergência. Confirmar disponibilidade para o turno de sábado.”</p>
+      <p>Uma resposta incompleta pede uma pergunta adicional. Uma incompatibilidade objetiva, como indisponibilidade para um turno essencial após confirmação, pode justificar a decisão para aquela vaga.</p>
+    </details>
+    <details>
+      <summary>Dê retorno e acompanhe a contratação</summary>
+      <p>Ao avançar com a pessoa, confirme por WhatsApp o próximo passo, o horário e a referência do local. Quando o processo terminar, informe o resultado de forma respeitosa, atualize a etapa e registre a data de integração e de início conforme o combinado.</p>
+    </details>
+  </article>
+  <article id="help-interview" class="panel help-panel">
+    <h2>Roteiro de entrevista</h2>
+    <ol class="help-interview">
+      <li><strong>Abra a conversa.</strong> Apresente seu nome, a agência, o cargo e a duração prevista da entrevista. Confirme se a pessoa pode falar naquele momento.</li>
+      <li><strong>Confirme a ficha.</strong> Pergunte quais atividades ela fazia, por quanto tempo e com quais ferramentas. Valide turno, deslocamento e disponibilidade para começar.</li>
+      <li><strong>Peça um exemplo real.</strong> “Conte sobre uma divergência em um pedido. Qual era a sua responsabilidade, o que você fez e como terminou?” Se a resposta vier genérica, pergunte qual foi a ação dela.</li>
+      <li><strong>Explore um cenário da vaga.</strong> “Você recebeu dois pedidos urgentes e encontrou um item avariado. Como organizaria a execução e a comunicação com a equipe?” Avalie a resposta pelos procedimentos esperados no cargo.</li>
+      <li><strong>Encerre com clareza.</strong> Abra espaço para perguntas. Diga qual é a próxima etapa e quando espera retornar. Registre as evidências e atualize a ficha após a conversa.</li>
+    </ol>
+    <h3>Primeiro contato pelo WhatsApp</h3>
+    <blockquote>Olá, [nome]! Sou [recrutadora], da [agência]. Recebi sua candidatura para [cargo] em [cidade]. Posso te explicar a vaga e confirmar sua disponibilidade para uma conversa?</blockquote>
+  </article>
+</section>
 <p class="muted" id="notice" role="status"></p></div></main></div>
 <script type="module">
+import { dailyGreeting } from './painel-saudacao.js';
 import './vagas-plus.js';
 import './curriculos-plus.js';
 import './gestao-plus.js';
@@ -39,7 +141,7 @@ function view(name,{remember=true}={}){
   document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));
   E(name+'View').classList.remove('hidden');
   document.querySelectorAll('.nav-link').forEach(x=>x.classList.toggle('active',x.dataset.view===name));
-  E('breadcrumb').textContent={dashboard:'Visão geral',jobs:'Vagas e inscrições',resumes:'Banco de currículos',team:'Equipe e acessos'}[name];
+  E('breadcrumb').textContent={dashboard:'Visão geral',jobs:'Vagas e inscrições',resumes:'Banco de currículos',team:'Equipe e acessos',help:'Central de Ajuda'}[name];
   E('workspaceBack').classList.toggle('hidden',name==='dashboard'&&!viewHistory.length);
 }
 function closeJobForm(){
@@ -53,7 +155,7 @@ E('workspaceBack').onclick=()=>{
   document.querySelector('.nav-link.active')?.focus();
 };
 function loginScreen(msg=''){uid=null;clearInterval(timer);if(realtime){db.removeChannel(realtime);realtime=null;}E('app').classList.add('hidden');E('auth').classList.remove('hidden');error(msg)}
-async function authorize(user){const {data:r,error:e}=await db.from('recruiters').select('full_name,enabled').eq('user_id',user.id).maybeSingle();if(e||!r?.enabled){await db.auth.signOut();loginScreen('Conta online criada, mas ainda não autorizada para acessar os currículos. Solicite a liberação ao administrador.');return}uid=user.id;userName=r.full_name||'recrutador';E('sidebarName').textContent=userName;E('greetingName').textContent=userName.split(' ')[0];E('auth').classList.add('hidden');E('app').classList.remove('hidden');viewHistory.length=0;currentView=null;view('dashboard');await refresh();if(!realtime){realtime=db.channel('c360-live').on('postgres_changes',{event:'*',schema:'public',table:'applications'},refresh).subscribe()}clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)refresh()},15000)}
+async function authorize(user){const {data:r,error:e}=await db.from('recruiters').select('full_name,enabled').eq('user_id',user.id).maybeSingle();if(e||!r?.enabled){await db.auth.signOut();loginScreen('Conta online criada, mas ainda não autorizada para acessar os currículos. Solicite a liberação ao administrador.');return}uid=user.id;userName=r.full_name||'recrutador';E('sidebarName').textContent=userName;const greeting=dailyGreeting(r.full_name);E('greetingName').textContent=greeting.title;E('dailyMessage').textContent=greeting.message;E('auth').classList.add('hidden');E('app').classList.remove('hidden');viewHistory.length=0;currentView=null;view('dashboard');await refresh();if(!realtime){realtime=db.channel('c360-live').on('postgres_changes',{event:'*',schema:'public',table:'applications'},refresh).subscribe()}clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)refresh()},15000)}
 E('toggleSignup').onclick=()=>{signup=!signup;E('nameWrap').classList.toggle('hidden',!signup);E('authName').required=signup;E('authTitle').textContent=signup?'Crie sua conta online':'Bem-vindo de volta';E('authSubtitle').textContent=signup?'O administrador precisa autorizar o acesso após o cadastro.':'Entre com suas credenciais para continuar.';E('submitText').textContent=signup?'Criar minha conta':'Entrar na plataforma';E('toggleSignup').textContent=signup?'Já tenho conta':'Criar minha conta online';error('')};
 E('authForm').onsubmit=async ev=>{ev.preventDefault();error('');const email=E('authEmail').value,password=E('authPassword').value;if(signup){const {data,error:errorSignup}=await db.auth.signUp({email,password,options:{data:{full_name:E('authName').value},emailRedirectTo:'https://idemararruda-wq.github.io/curriculo360-web/'}});if(errorSignup){error(errorSignup.message);return}if(data.session){await db.auth.signOut()}error('Cadastro solicitado. Confirme seu e-mail, se receber uma mensagem, e aguarde a autorização do administrador. Sua senha do sistema antigo não foi transferida.');return}const {data,error:errorLogin}=await db.auth.signInWithPassword({email,password});if(errorLogin){error(errorLogin.message==='Invalid login credentials'?'Essa conta ainda não existe no Supabase ou a senha é diferente. Clique em “Criar minha conta online”.':errorLogin.message);return}await authorize(data.user)};
 E('logoutBtn').onclick=async()=>{await db.auth.signOut();loginScreen('Sessão encerrada.')};

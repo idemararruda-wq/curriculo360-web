@@ -41,3 +41,16 @@ dialog:has(#c360Triagem), dialog:has(#mgBody) { color: #191c38; }
 .back-button { white-space: nowrap; }
 #app #jobFormWrap > .row { margin-bottom: 14px; }
 #app #jobFormWrap > .row h3 { margin: 0; }
+#app .dashboard-message { margin: 0 0 18px; padding: 14px 19px; background: #ede8fa; border-left: 4px solid #7658c5; border-radius: 12px; color: #3e2b73; }
+#app .dashboard-message p { margin: 0; line-height: 1.6; }
+#app .help-index { display: flex; flex-wrap: wrap; gap: 8px; }
+#app .help-index a { padding: 9px 13px; border-radius: 10px; background: #ede8fa; color: #48338d; font-weight: 650; text-decoration: none; }
+#app .help-index a:hover { text-decoration: underline; }
+#app .help-panel { scroll-margin-top: 20px; line-height: 1.6; }
+#app .help-panel h2 { margin-top: 0; font-size: 22px; }
+#app .help-panel details { border-top: 1px solid #e6e4ef; }
+#app .help-panel summary { padding: 14px 4px; color: #392976; font-weight: 700; cursor: pointer; }
+#app .help-panel details > p { padding: 0 4px; }
+#app .help-panel ol { padding-inline-start: 24px; }
+#app .help-panel li + li { margin-top: 9px; }
+#app .help-panel blockquote { margin: 0; padding: 12px 15px; background: #f5f2fd; border-radius: 10px; }
