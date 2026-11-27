@@ -69,3 +69,17 @@ dialog:has(#c360Triagem), dialog:has(#mgBody) { color: #191c38; }
 #app .c360-pagination[hidden] { display: none; }
 #app .c360-pagination [aria-current="page"] { background: #5940bc; color: white; }
 #app #c360List { scroll-margin-top: 14px; }
+#app #productivityShortcut { margin: 0 0 16px; }
+#app #productivityBrief:not(:empty) { display: inline-block; padding-left: 8px; font-weight: 500; }
+#app #productivityPanel { scroll-margin-top: 14px; }
+#app #productivityPanel input { border: 1px solid #dbd7ea; border-radius: 8px; padding: 8px; margin-left: 6px; }
+#app .productivity-roster, #app .productivity-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(180px,100%),1fr)); gap: 10px; }
+#app .productivity-member { background: #f7f4fb; border: 1px solid #e0d7f1; border-radius: 12px; text-align: left; padding: 12px; color: #2b2045; }
+#app .productivity-member[aria-pressed="true"] { border-color: #6246ba; background: #efe8ff; }
+#app .productivity-member span { display: block; margin: 5px 0; }
+#app .productivity-member progress { width: 100%; accent-color: #6246ba; }
+#app .productivity-metrics div { padding: 10px; background: #f5f2fa; border-radius: 9px; }
+#app .productivity-metrics dd { margin: 0; font-size: 22px; font-weight: 750; }
+#app #productivityDetail:not(:empty) { margin-top: 24px; }
+#app .productivity-preview { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+#app .productivity-preview[hidden] { display: none; }
